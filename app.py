@@ -253,105 +253,96 @@ def upload_doctor(doctor_code):
 @app.route("/reports")
 @login_required
 def reports():
-    """
-    Displays a list of all patients and their reports.
-    Includes a search functionality to filter patients by name.
-    This route requires the user to be logged in.
-    """
     search = request.args.get("search", "").lower()
     data = {}
 
-    # More efficient: Search directly and group results in Python.
-    # This allows searching by patient name (folder) or filename.
-    expression = None
-    if search:
-        # Search in folder (patient name) OR filename
-        expression = f"folder:*{search}* OR filename:*{search}*"
-
-    # Fetch images and PDFs (resource_type="image")
+    # ❌ REMOVE expression usage for now
     resources_img = cloudinary.api.resources(
-        type="upload",
-        resource_type="image",
-        max_results=500,
-        expression=expression
+    type="upload",
+    resource_type="image",
+    prefix="apollo_mumbai/",
+    max_results=500
     )
 
-    # Fetch videos (resource_type="video")
     resources_vid = cloudinary.api.resources(
         type="upload",
         resource_type="video",
-        max_results=500,
-        expression=expression
+        prefix="apollo_mumbai/",
+        max_results=500
     )
 
-    # Merge the results from both queries
+
     all_resources = (
-        resources_img.get("resources", []) + resources_vid.get("resources", [])
+        resources_img.get("resources", []) +
+        resources_vid.get("resources", [])
     )
 
     for res in all_resources:
         public_id = res["public_id"]
+        parts = public_id.split("/")
 
-        # Skip root-level files by checking for a separator in the public_id
-        if "/" not in public_id:
-            continue  
+        # Expect: hospital/doctor_or__unassigned/patient/file
+        if len(parts) < 4:
+            continue
 
-        # The folder is the first part of the public_id
-        patient_name = public_id.split("/")[0]
+        hospital = parts[0]
+        doctor = parts[1]      # dr_rutu OR _unassigned
+        patient = parts[2]
 
-        # Initialize patient entry if not exists
-        if patient_name not in data:
-            data[patient_name] = {
-        "files": [],    
-        "pdf_count": 0,
-        "image_count": 0,
-        "video_count": 0,
-    }
+        # ---- INIT STRUCTURE ----
+        data.setdefault(hospital, {})
+        data[hospital].setdefault(doctor, {})
+        data[hospital][doctor].setdefault(patient, {
+            "files": [],
+            "pdf_count": 0,
+            "image_count": 0,
+            "video_count": 0,
+        })
 
         upload_date = datetime.strptime(
             res["created_at"], "%Y-%m-%dT%H:%M:%SZ"
-        ).strftime('%b %d, %Y')
+        ).strftime("%b %d, %Y")
 
         file_obj = {
-            "name": f"{public_id.split('/')[-1]}.{res['format']}",
+            "name": f"{parts[-1]}.{res['format']}",
             "date": upload_date,
             "url": res["secure_url"],
             "public_id": public_id,
             "is_pdf": res["format"] == "pdf",
             "is_video": res["resource_type"] == "video",
-            "resource_type": res["resource_type"]
+            "resource_type": res["resource_type"],
         }
 
         if file_obj["is_pdf"]:
-            data[patient_name]["pdf_count"] += 1
+            data[hospital][doctor][patient]["pdf_count"] += 1
         elif file_obj["is_video"]:
-            data[patient_name]["video_count"] += 1
+            data[hospital][doctor][patient]["video_count"] += 1
         else:
-            data[patient_name]["image_count"] += 1
+            data[hospital][doctor][patient]["image_count"] += 1
 
-        # If it's a PDF, generate a thumbnail URL for the first page
-        if file_obj.get("is_pdf"):
+        # ---- THUMBNAILS ----
+        if file_obj["is_pdf"]:
             file_obj["thumbnail_url"] = cloudinary.utils.cloudinary_url(
                 public_id,
-                resource_type="image", # PDFs are treated as images for transformations
-                format="jpg",          # Convert to JPG for the thumbnail
-                page=1,                # Get the first page
+                resource_type="image",
+                format="jpg",
+                page=1,
                 secure=True
             )[0]
-        # If it's a video, generate a thumbnail image
-        elif file_obj.get("is_video"):
+        elif file_obj["is_video"]:
             file_obj["thumbnail_url"] = cloudinary.utils.cloudinary_url(
                 public_id,
                 resource_type="video",
-                transformation=[{'width': 400, 'crop': 'limit'}],
                 format="jpg",
                 secure=True
             )[0]
 
-        # Use setdefault for cleaner grouping
-        data[patient_name]["files"].append(file_obj)
+        data[hospital][doctor][patient]["files"].append(file_obj)
 
     return render_template("reports.html", data=data, search=search)
+
+
+
 
 @app.route("/delete", methods=["POST"])
 @login_required
