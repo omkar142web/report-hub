@@ -1213,3 +1213,10 @@ mark {
   display: none; /* patient toggle controls this */
 }
 
+.actions button {
+  width: auto;
+}
+
+input, button {
+  width: 95%;
+}

@@ -22,6 +22,18 @@ DOCTOR_MAP = {
     "op": "another_hospital",
 }
 
+DOCTOR_PASSWORDS = {
+    "dr_rutu": generate_password_hash("rutu1"),
+    "dr_omkar": generate_password_hash("omkar1"),
+    "op": generate_password_hash("op1"),
+}
+
+HOSPITAL_PASSWORDS = {
+    "apollo_mumbai": generate_password_hash("apollo1"),
+    "another_hospital": generate_password_hash("another1"),
+}
+
+
 
 
 app = Flask(__name__)
@@ -39,16 +51,15 @@ PASSWORD_HASH = os.environ.get("DOCTOR_PASSWORD_HASH")
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'webm'}
 
 def login_required(f):
-    """
-    Decorator to ensure a user is logged in before accessing a route.
-    Redirects to the login page if the user is not in the session.
-    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get("doctor"):
-            return redirect(url_for('index'))
+            return redirect(url_for('login'))  # ✅ correct
         return f(*args, **kwargs)
     return decorated_function
+
+
+
 
 def clean_name(name):
 
@@ -260,32 +271,61 @@ def index():
 
     return render_template("index.html")
 
+
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """
-    Handles the doctor's login. On successful login, the user is added
-    to the session and redirected to the reports page.
-    """
     error = None
+    target = session.get("login_target")
+
     if request.method == "POST":
-        # Ensure the hash is set in the environment
-        if not PASSWORD_HASH:
-            error = "Application is not configured for login."
-        # Check the submitted password against the stored hash
-        elif check_password_hash(PASSWORD_HASH, request.form.get("password", "")):
-            session["doctor"] = True
-            return redirect(url_for('reports'))
+        password = request.form.get("password", "")
+
+        # 👨‍⚕️ Doctor login
+        if target and target.startswith("doctor:"):
+            doctor_code = target.split(":")[1]
+
+            if doctor_code in DOCTOR_PASSWORDS and \
+               check_password_hash(DOCTOR_PASSWORDS[doctor_code], password):
+
+                session["doctor_auth"] = doctor_code
+                session.pop("login_target", None)
+                return redirect(url_for("reports_doctor", doctor_code=doctor_code))
+            else:
+                error = "Invalid doctor password"
+
+        # 🏥 Hospital login
+        elif target and target.startswith("hospital:"):
+            hospital_code = target.split(":")[1]
+
+            if hospital_code in HOSPITAL_PASSWORDS and \
+               check_password_hash(HOSPITAL_PASSWORDS[hospital_code], password):
+
+                session["hospital_auth"] = hospital_code
+                session.pop("login_target", None)
+                return redirect(url_for("reports_hospital", hospital_code=hospital_code))
+            else:
+                error = "Invalid hospital password"
+
+        # 🧑‍💼 Admin login
         else:
-            error = "Invalid password."
-    
+            if PASSWORD_HASH and check_password_hash(PASSWORD_HASH, password):
+                session["doctor"] = True
+                return redirect(url_for("reports"))
+            else:
+                error = "Invalid password"
+
     return render_template("login.html", error=error)
+
+
 
 @app.route("/logout")
 def logout():
-    """Clears the session to log the user out."""
     session.clear()
-    flash("You have been logged out successfully.", "success")
-    return redirect(url_for('index'))
+    return redirect(url_for("login"))
+
+
 
 @app.route("/upload/d/<doctor_code>", methods=["GET", "POST"])
 def upload_doctor(doctor_code):
@@ -338,12 +378,22 @@ def upload_doctor(doctor_code):
 
 
 @app.route("/reports/h/<hospital_code>")
-@login_required
 def reports_hospital(hospital_code):
     hospital_code = hospital_code.lower()
 
-    if hospital_code not in set(DOCTOR_MAP.values()):
+    if hospital_code not in HOSPITAL_PASSWORDS:
         return "Invalid hospital", 404
+
+    # 🔐 not logged in
+    if not session.get("hospital_auth"):
+        session["login_target"] = f"hospital:{hospital_code}"
+        return redirect(url_for("login"))
+
+    # 🔐 wrong hospital logged in
+    if session["hospital_auth"] != hospital_code:
+        session.clear()
+        session["login_target"] = f"hospital:{hospital_code}"
+        return redirect(url_for("login"))
 
     prefix = f"{hospital_code}/"
     data = build_reports_data(prefix=prefix)
@@ -354,6 +404,7 @@ def reports_hospital(hospital_code):
         search="",
         view="hospital"
     )
+
 
 
 
@@ -370,14 +421,35 @@ def reports():
     )
 
 
+@app.route("/reports/data")
+@login_required
+def reports_data():
+    return render_template(
+        "reports_data.html",
+        doctor_map=DOCTOR_MAP,
+    )
+
+
+
+
 
 @app.route("/reports/d/<doctor_code>")
-@login_required
 def reports_doctor(doctor_code):
     doctor_code = doctor_code.lower()
 
     if doctor_code not in DOCTOR_MAP:
         return "Invalid doctor", 404
+
+    # 🔐 not logged in
+    if not session.get("doctor_auth"):
+        session["login_target"] = f"doctor:{doctor_code}"
+        return redirect(url_for("login"))
+
+    # 🔐 wrong doctor logged in
+    if session["doctor_auth"] != doctor_code:
+        session.clear()
+        session["login_target"] = f"doctor:{doctor_code}"
+        return redirect(url_for("login"))
 
     hospital = DOCTOR_MAP[doctor_code]
     prefix = f"{hospital}/{doctor_code}/"
@@ -394,26 +466,22 @@ def reports_doctor(doctor_code):
 
 
 
+
 @app.route("/delete", methods=["POST"])
-@login_required
 def delete_file():
-    """
-    Deletes a specific report file from Cloudinary.
-    Requires the user to be logged in.
-    """
+    if not (session.get("doctor") or session.get("doctor_auth") or session.get("hospital_auth")):
+        return redirect(url_for("login"))
+
     public_id = request.form.get("public_id")
     if public_id:
-        # Deleting requires the public_id
-        # We must also specify the resource_type for videos
         resource_type = request.form.get("resource_type", "image")
-        cloudinary.uploader.destroy(
-            public_id, resource_type=resource_type
-        )
-        flash(f"Report was deleted successfully.", "success")
+        cloudinary.uploader.destroy(public_id, resource_type=resource_type)
+        flash("Report was deleted successfully.", "success")
     else:
         flash("Could not delete report: missing ID.", "error")
-        
-    return redirect(url_for('reports'))
+
+    return redirect(request.referrer or url_for("reports"))
+
 
 
 
@@ -470,7 +538,6 @@ def download_patient_zip(hospital, doctor, patient):
         as_attachment=True,
         download_name=f"{patient}_reports.zip"
     )
-
 
 
 

@@ -118,22 +118,36 @@
                             <div class="grid">
                               {% for file_obj in patient_data.files %}
                                 <div class="card">
-                                  <div class="file-name">{{ file_obj.name }}</div>
-                                  <div class="file-date">Uploaded on: {{ file_obj.date }}</div>
+  <div class="file-name">{{ file_obj.name }}</div>
+  <div class="file-date">Uploaded on: {{ file_obj.date }}</div>
 
-                                  {% if file_obj.is_pdf %}
-                                    <span class="badge pdf">PDF</span>
-                                    <a href="{{ file_obj.url }}" target="_blank">
-                                      <img src="{{ file_obj.thumbnail_url }}">
-                                    </a>
-                                  {% elif file_obj.is_video %}
-                                    <span class="badge video">VIDEO</span>
-                                    <video src="{{ file_obj.url }}" controls></video>
-                                  {% else %}
-                                    <span class="badge img">IMG</span>
-                                    <img src="{{ file_obj.url }}">
-                                  {% endif %}
-                                </div>
+  {% if file_obj.is_pdf %}
+    <span class="badge pdf">PDF</span>
+    <a href="{{ file_obj.url }}" target="_blank">
+      <img src="{{ file_obj.thumbnail_url }}">
+    </a>
+
+  {% elif file_obj.is_video %}
+    <span class="badge video">VIDEO</span>
+    <video src="{{ file_obj.url }}" controls></video>
+
+  {% else %}
+    <span class="badge img">IMG</span>
+    <img src="{{ file_obj.url }}">
+  {% endif %}
+
+  <!-- ✅ ADD ACTIONS EXACTLY HERE -->
+  <div class="actions">
+    <a href="{{ file_obj.url }}" target="_blank">Open</a>
+
+    <form action="{{ url_for('delete_file') }}" method="post">
+      <input type="hidden" name="public_id" value="{{ file_obj.public_id }}">
+      <input type="hidden" name="resource_type" value="{{ file_obj.resource_type }}">
+      <button type="submit" class="delete">Delete</button>
+    </form>
+  </div>
+</div>
+
                               {% endfor %}
                             </div>
                           </div>
