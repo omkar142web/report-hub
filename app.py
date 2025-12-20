@@ -76,6 +76,92 @@ def get_next_index(folder_prefix):
 
 
 
+def build_reports_data(prefix=None):
+    data = {}
+
+    resources_img = cloudinary.api.resources(
+        type="upload",
+        resource_type="image",
+        prefix=prefix,
+        max_results=500
+    )
+
+    resources_vid = cloudinary.api.resources(
+        type="upload",
+        resource_type="video",
+        prefix=prefix,
+        max_results=500
+    )
+
+    all_resources = (
+        resources_img.get("resources", []) +
+        resources_vid.get("resources", [])
+    )
+
+    for res in all_resources:
+        public_id = res["public_id"]
+        parts = public_id.split("/")
+
+        # hospital / doctor / patient / file
+        if len(parts) < 4:
+            continue
+
+        hospital, doctor, patient = parts[0], parts[1], parts[2]
+
+        data.setdefault(hospital, {})
+        data[hospital].setdefault(doctor, {})
+        data[hospital][doctor].setdefault(patient, {
+            "files": [],
+            "pdf_count": 0,
+            "image_count": 0,
+            "video_count": 0,
+        })
+
+        upload_date = datetime.strptime(
+            res["created_at"], "%Y-%m-%dT%H:%M:%SZ"
+        ).strftime("%b %d, %Y")
+
+        file_obj = {
+            "name": f"{parts[-1]}.{res['format']}",
+            "date": upload_date,
+            "url": res["secure_url"],
+            "public_id": public_id,
+            "is_pdf": res["format"] == "pdf",
+            "is_video": res["resource_type"] == "video",
+            "resource_type": res["resource_type"],
+        }
+
+        if file_obj["is_pdf"]:
+            data[hospital][doctor][patient]["pdf_count"] += 1
+        elif file_obj["is_video"]:
+            data[hospital][doctor][patient]["video_count"] += 1
+        else:
+            data[hospital][doctor][patient]["image_count"] += 1
+
+        if file_obj["is_pdf"]:
+            file_obj["thumbnail_url"] = cloudinary.utils.cloudinary_url(
+                public_id,
+                resource_type="image",
+                format="jpg",
+                page=1,
+                secure=True
+            )[0]
+        elif file_obj["is_video"]:
+            file_obj["thumbnail_url"] = cloudinary.utils.cloudinary_url(
+                public_id,
+                resource_type="video",
+                format="jpg",
+                secure=True
+            )[0]
+
+        data[hospital][doctor][patient]["files"].append(file_obj)
+
+    return data
+
+
+
+
+
 @app.route("/upload/h/<hospital_code>", methods=["GET", "POST"])
 def upload_hospital(hospital_code):
     # 1️⃣ Validate hospital
@@ -250,96 +336,44 @@ def upload_doctor(doctor_code):
     return render_template("index.html")
 
 
+@app.route("/reports/h/<hospital_code>")
+@login_required
+def reports_hospital(hospital_code):
+    hospital_code = hospital_code.lower()
+
+    # Validate hospital
+    if hospital_code not in set(DOCTOR_MAP.values()):
+        return "Invalid hospital", 404
+
+    prefix = f"{hospital_code}/"
+    data = build_reports_data(prefix=prefix)
+
+    return render_template("reports.html", data=data, search="")
+
+
+
 @app.route("/reports")
 @login_required
 def reports():
-    search = request.args.get("search", "").lower()
-    data = {}
-
-    # ❌ REMOVE expression usage for now
-    resources_img = cloudinary.api.resources(
-    type="upload",
-    resource_type="image",
-    prefix="apollo_mumbai/",
-    max_results=500
-    )
-
-    resources_vid = cloudinary.api.resources(
-        type="upload",
-        resource_type="video",
-        prefix="apollo_mumbai/",
-        max_results=500
-    )
+    data = build_reports_data(prefix="apollo_mumbai/")
+    return render_template("reports.html", data=data, search="")
 
 
-    all_resources = (
-        resources_img.get("resources", []) +
-        resources_vid.get("resources", [])
-    )
+@app.route("/reports/d/<doctor_code>")
+@login_required
+def reports_doctor(doctor_code):
+    doctor_code = doctor_code.lower()
 
-    for res in all_resources:
-        public_id = res["public_id"]
-        parts = public_id.split("/")
+    if doctor_code not in DOCTOR_MAP:
+        return "Invalid doctor", 404
 
-        # Expect: hospital/doctor_or__unassigned/patient/file
-        if len(parts) < 4:
-            continue
+    hospital = DOCTOR_MAP[doctor_code]
 
-        hospital = parts[0]
-        doctor = parts[1]      # dr_rutu OR _unassigned
-        patient = parts[2]
+    # 🔍 Only THIS doctor's files
+    prefix = f"{hospital}/{doctor_code}/"
+    full_data = build_reports_data(prefix=prefix)
 
-        # ---- INIT STRUCTURE ----
-        data.setdefault(hospital, {})
-        data[hospital].setdefault(doctor, {})
-        data[hospital][doctor].setdefault(patient, {
-            "files": [],
-            "pdf_count": 0,
-            "image_count": 0,
-            "video_count": 0,
-        })
-
-        upload_date = datetime.strptime(
-            res["created_at"], "%Y-%m-%dT%H:%M:%SZ"
-        ).strftime("%b %d, %Y")
-
-        file_obj = {
-            "name": f"{parts[-1]}.{res['format']}",
-            "date": upload_date,
-            "url": res["secure_url"],
-            "public_id": public_id,
-            "is_pdf": res["format"] == "pdf",
-            "is_video": res["resource_type"] == "video",
-            "resource_type": res["resource_type"],
-        }
-
-        if file_obj["is_pdf"]:
-            data[hospital][doctor][patient]["pdf_count"] += 1
-        elif file_obj["is_video"]:
-            data[hospital][doctor][patient]["video_count"] += 1
-        else:
-            data[hospital][doctor][patient]["image_count"] += 1
-
-        # ---- THUMBNAILS ----
-        if file_obj["is_pdf"]:
-            file_obj["thumbnail_url"] = cloudinary.utils.cloudinary_url(
-                public_id,
-                resource_type="image",
-                format="jpg",
-                page=1,
-                secure=True
-            )[0]
-        elif file_obj["is_video"]:
-            file_obj["thumbnail_url"] = cloudinary.utils.cloudinary_url(
-                public_id,
-                resource_type="video",
-                format="jpg",
-                secure=True
-            )[0]
-
-        data[hospital][doctor][patient]["files"].append(file_obj)
-
-    return render_template("reports.html", data=data, search=search)
+    return render_template("reports.html", data=full_data, search="")
 
 
 
