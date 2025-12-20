@@ -15,6 +15,14 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
+
+DOCTOR_MAP = {
+    "dr_rutu": "apollo_mumbai",
+    "dr_omkar": "apollo_mumbai",
+}
+
+
+
 app = Flask(__name__)
 # For production, use a strong, randomly-generated secret loaded from an environment variable.
 # You can generate a good key using: python -c 'import secrets; print(secrets.token_hex())'
@@ -58,16 +66,63 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def get_next_index(patient_folder):
-    """
-    Counts existing files in a Cloudinary folder to determine the next file index.
-    """
+def get_next_index(folder_prefix):
     result = cloudinary.api.resources(
         type="upload",
-        prefix=f"{patient_folder}/",
-        max_results=500  # Adjust if a patient might have more files
+        prefix=f"{folder_prefix}/",
+        max_results=500
     )
     return len(result.get("resources", [])) + 1
+
+
+
+@app.route("/upload/h/<hospital_code>", methods=["GET", "POST"])
+def upload_hospital(hospital_code):
+    # 1️⃣ Validate hospital
+    if hospital_code not in set(DOCTOR_MAP.values()):
+        return "Invalid hospital upload link", 404
+
+    if request.method == "POST":
+        patient = request.form.get("patient", "").strip()
+        if not patient:
+            return jsonify({"error": "Patient name is required."}), 400
+
+        files = request.files.getlist("report")
+        if not files or all(f.filename == "" for f in files):
+            return jsonify({"error": "No files selected."}), 400
+
+        patient_folder = clean_name(patient)
+
+        # ✅ OPTION A — HOSPITAL HOLDING BUCKET
+        base_folder = f"{hospital_code}/_unassigned/{patient_folder}"
+        current_index = get_next_index(base_folder)
+
+        uploaded = 0
+
+        for f in files:
+            if f and f.filename and allowed_file(f.filename):
+                public_id = f"{patient_folder}_{current_index}"
+
+                cloudinary.uploader.upload(
+                    f,
+                    folder=base_folder,
+                    public_id=public_id,
+                    resource_type="auto",
+                    access_mode="public",
+                )
+
+                current_index += 1
+                uploaded += 1
+
+        return jsonify({
+            "success": f"{uploaded} file(s) uploaded for {patient}."
+        })
+
+    # GET → same upload UI
+    return render_template("index.html")
+
+
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -144,6 +199,55 @@ def logout():
     session.clear()
     flash("You have been logged out successfully.", "success")
     return redirect(url_for('index'))
+
+@app.route("/upload/d/<doctor_code>", methods=["GET", "POST"])
+def upload_doctor(doctor_code):
+    doctor_code = doctor_code.lower()
+
+    # 1️⃣ Validate doctor
+    if doctor_code not in DOCTOR_MAP:
+        return "Invalid upload link", 404
+
+    hospital = DOCTOR_MAP[doctor_code]
+
+    # 2️⃣ Handle upload (same UX as /)
+    if request.method == "POST":
+        patient = request.form.get("patient", "").strip()
+        if not patient:
+            return jsonify({"error": "Patient name is required."}), 400
+
+        files = request.files.getlist("report")
+        if not files or all(f.filename == "" for f in files):
+            return jsonify({"error": "No files selected."}), 400
+
+        patient_folder = clean_name(patient)
+
+        base_folder = f"{hospital}/{doctor_code}/{patient_folder}"
+        current_index = get_next_index(base_folder)
+
+        uploaded = 0
+
+        for f in files:
+            if f and f.filename and allowed_file(f.filename):
+                public_id = f"{patient_folder}_{current_index}"
+
+                cloudinary.uploader.upload(
+                    f,
+                    folder=base_folder,
+                    public_id=public_id,
+                    resource_type="auto",
+                    access_mode="public",
+                )
+
+                current_index += 1
+                uploaded += 1
+
+        return jsonify({
+            "success": f"{uploaded} file(s) uploaded for {patient}."
+        })
+
+    # 3️⃣ GET → reuse existing upload UI
+    return render_template("index.html")
 
 
 @app.route("/reports")
@@ -327,8 +431,6 @@ def download_patient_zip(patient):
         as_attachment=True,
         download_name=f"{patient}_reports.zip"
     )
-
-
 
 
 

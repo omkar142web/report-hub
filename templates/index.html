@@ -19,11 +19,12 @@
       <h2>📤 Upload Patient Reports</h2>
 
       <form
-        id="upload-form"
-        action="{{ url_for('index') }}"
-        method="post"
-        enctype="multipart/form-data"
-      >
+      id="upload-form"
+      action="{{ request.path }}"
+      method="post"
+      enctype="multipart/form-data"
+      > 
+
         <input
           type="text"
           name="patient"
