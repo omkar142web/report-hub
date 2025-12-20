@@ -1,0 +1,8 @@
+# Folder for user-uploaded reports
+uploads/
+
+# Python virtual environment folders
+venv/
+
+# Python cache
+__pycache__/

@@ -1,0 +1,35 @@
+[33m8a15efe[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m ui: padding-bottom: 25px;
+[33mc9cfdfa[m ui: 😗 ignore
+[33mf033149[m fix: icon name
+[33md60ca30[m ui: changing icon
+[33m56d40be[m ui: 🤧 ignore again
+[33m05cd14f[m ui: adding icon
+[33m32ff645[m ui: 🤧 ignore 2
+[33md468caf[m fix: notification mayb fixed
+[33m487e793[m fix: return to index mayb fixed
+[33m565d69e[m ui: hover to not white but red mayb fixed
+[33m92b479f[m feat: ✅ Final Status Issue Status Logout redirect ✅ Fixed Logout color ✅ Fixed Search button UX ✅ Fixed Password placeholder ✅ Fixed
+[33me2bce3b[m fix: pdf opening issue fixing/ed
+[33mbac818d[m ui: 🤧 ignore again
+[33mc3461e6[m fix: user clicks the thumbnail or the ,,Open,, link, they are directed to the correct /raw/upload/ URL, allowing the browser to open the PDF file without issue
+[33m6d01f86[m ui: 🤧 ignore
+[33m28eedc1[m fix: pdf preview issue fixing/ed 1
+[33mb109e25[m fix: related to public_id in app py
+[33mbf56df2[m ui: 🤧
+[33m6242f8a[m fix: removing Uncategorized part using continue, patient dash name = previously i didnt accept the change and commited it , hehe
+[33m3dca3c7[m fix: removing Uncategorized part using continue, patient dash name =
+[33mcc3559f[m fix: actual bug is in upload js
+[33m6879879[m fix : Uncategorization, with_field=folder in double quatation added in app py
+[33ma5ef8f6[m ui: placeholder
+[33m2ed6337[m fix: Uncategorization
+[33m63e8c88[m fix:organization of files, Each patient = collapsible folder, Click patient name → expand/collapse files
+[33ma1b0ba5[m fix(reports): Correctly display all unique patient files
+[33m8b25644[m modified:   README.md
+[33m2c50f6b[m feat: Integrate Cloudinary for persistent file storage and other few-2 bugs
+[33mc3e3c76[m including cloudinary
+[33m7af2734[m chore: use env-based upload directory for production, addressed : storage problem
+[33m4848f51[m feat: Add custom focus style to search box and update pages
+[33m916e480[m feat: Implement AJAX uploads and UI improvements
+[33m0d45f4e[m feat: Implement AJAX uploads and other quality improvements
+[33m8c4bdf5[m feat: Add configuration for deployment
+[33m0d1ccfa[m Initial commit: Add medical report application

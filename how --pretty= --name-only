@@ -1,0 +1,33 @@
+[33mcommit 6879879ef0a13888dfc05817aed6234d7f0a94da[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: Omkar <omkarpc142@gmail.com>
+Date:   Thu Dec 18 07:22:09 2025 +0530
+
+    fix : Uncategorization, with_field=folder in double quatation added in app py
+
+[1mdiff --git a/app.py b/app.py[m
+[1mindex 60624dd..93f655d 100644[m
+[1m--- a/app.py[m
+[1m+++ b/app.py[m
+[36m@@ -154,7 +154,8 @@[m [mdef reports():[m
+     resources = cloudinary.api.resources([m
+         type="upload", [m
+         max_results=500,[m
+[31m-        expression=expression[m
+[32m+[m[32m        expression=expression,[m
+[32m+[m[32m        with_field="folder"[m
+     )[m
+         [m
+     for res in resources.get("resources", []):[m
+[1mdiff --git a/templates/index.html b/templates/index.html[m
+[1mindex efccacd..f7b20e6 100644[m
+[1m--- a/templates/index.html[m
+[1m+++ b/templates/index.html[m
+[36m@@ -22,7 +22,7 @@[m
+         <input[m
+           type="text"[m
+           name="patient"[m
+[31m-          placeholder="Enter Patient's Number/ Name"[m
+[32m+[m[32m          placeholder="Enter Patient's Number / Name 😷"[m
+           required[m
+         />[m
+ [m

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Doctor Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+    />
+  </head>
+  <body>
+    <div class="layout">
+      <div class="sidebar">
+        <a href="{{ url_for('reports') }}" class="clinic-logo">🩺 Clinic</a>
+        <a href="{{ url_for('logout') }}" class="logout">Logout</a>
+      </div>
+
+      <div class="main">
+        <h1>Patient Records 📋</h1>
+
+        <form class="search-box" action="{{ url_for('reports') }}" method="get">
+  <label for="search" class="sr-only">
+    Search patient or report name
+  </label>
+
+  <input
+    id="search"
+    name="search"
+    placeholder="🔍 Search patient or report name..."
+    value="{{ search }}"
+  />
+
+  <!-- INLINE RESULT COUNT -->
+  <span id="searchCounter" class="search-count-inline"></span>
+
+  <button type="submit" class="search-btn">Search</button>
+</form>
+
+
+        
+
+
+        <div id="searchNoResult" class="search-no-result">
+        ❌ No file found!
+        </div>
+
+
+        {% if not data %}
+        <div class="no-data">
+          <p>No patients found.</p>
+        </div>
+        {% endif %} 
+
+        <div id="patientsContainer"> 
+          {% for patient, patient_data in data.items() %}
+
+        <section class="patient-section">
+          <button class="patient-toggle" onclick="togglePatient('{{ loop.index }}')">
+  <span class="patient-name">👤 {{ patient }}</span>
+
+  
+  <div class="patient-info-wrapper" onclick="event.stopPropagation()">
+  <span class="file-count-text">
+    ({{ patient_data.files | length }} files)
+  </span>
+
+  <span class="info-icon">ⓘ</span>
+
+
+    <div class="patient-info-card">
+      <div class="patient-header">👤 {{ patient }}&nbsp;&nbsp;</div>
+
+      <div class="patient-stats">
+        <div>📃 PDFs : {{ patient_data.pdf_count }}&nbsp;&nbsp;</div>
+        <div>🖼️ Images : {{ patient_data.image_count }}&nbsp;&nbsp;</div>
+        <div>🎞️ Videos : {{ patient_data.video_count }}&nbsp;&nbsp;</div>
+      </div>
+
+        <!-- ZIP BUTTON -->
+      <a
+  href="{{ url_for('download_patient_zip', patient=patient) }}"
+  class="zip-btn"
+  style="margin-top: 10px; text-align: center;"
+>
+Download
+</a>
+
+
+    </div>
+  </div>
+</button>
+
+
+          <div class="patient-files" id="patient-{{ loop.index }}">
+            <div class="grid">
+              {% for file_obj in patient_data.files %}
+
+              <div class="card">
+                <div class="file-name">{{ file_obj.name }}</div>
+                <div class="file-date">Uploaded on: {{ file_obj.date }}</div>
+
+                {% if file_obj.is_pdf %}
+                <span class="badge pdf">PDF</span>
+                <!-- Link to the full PDF -->
+                <a href="{{ file_obj.url }}" target="_blank" rel="noopener noreferrer">
+                  <!-- Show the generated thumbnail image -->
+                  <img 
+                    src="{{ file_obj.thumbnail_url }}" 
+                    alt="Preview of PDF: {{ file_obj.name }}"
+                  />
+                </a>
+                {% elif file_obj.is_video %}
+                <span class="badge video">VIDEO</span>
+                <video
+                  src="{{ file_obj.url }}"
+                  controls
+                  preload="metadata"
+                ></video>
+                {% else %}
+                <span class="badge img">IMG</span>
+                <img
+                  src="{{ file_obj.url }}"
+                  alt="Image preview for {{ file_obj.name }}"
+                />
+                {% endif %}
+
+                <div class="actions">
+                  <a
+                    href="{{ file_obj.url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Open</a
+                  >
+                  <form
+                    action="{{ url_for('delete_file') }}"
+                    method="post"
+                    style="display: inline"
+                  >
+                    <input
+                      type="hidden"
+                      name="public_id"
+                      value="{{ file_obj.public_id }}"
+                    />
+                    <input
+                      type="hidden"
+                      name="resource_type"
+                      value="{{ file_obj.resource_type }}"
+                    />
+                    <button type="submit" class="delete">Delete</button>
+                  </form>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+                {% endfor %}
+      </div>   <!-- #patientsContainer -->
+    </div>     <!-- .main -->
+  </div>       <!-- .layout -->
+
+      
+
+    <script>
+      function togglePatient(id) {
+        const el = document.getElementById("patient-" + id);
+        const btn = el.previousElementSibling; // The button
+        if (el.style.display === "none" || el.style.display === "") {
+          el.style.display = "block";
+          btn.classList.add("active");
+        } else {
+          el.style.display = "none";
+          btn.classList.remove("active");
+        }
+      }
+    </script>
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <script>
+      showToast("{{ message }}", "{{ category }}");
+    </script>
+    {% endfor %} {% endif %} {% endwith %}
+
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const wrappers = document.querySelectorAll(".patient-info-wrapper");
+
+  function closeOthers(current) {
+    wrappers.forEach(w => {
+      if (w !== current) {
+        w.classList.remove("open");
+        w.dataset.locked = "false";
+      }
+    });
+  }
+
+  wrappers.forEach(wrapper => {
+    const icon = wrapper.querySelector(".info-icon");
+
+    // CLICK → toggle + lock (WORKS ON FIRST CLICK)
+    icon.addEventListener("click", (e) => {
+      e.stopPropagation(); // keep original behavior
+
+      const isLocked = wrapper.dataset.locked === "true";
+
+      // 🔥 NEW: close other menus only
+      closeOthers(wrapper);
+
+      if (isLocked) {
+        wrapper.classList.remove("open");
+        wrapper.dataset.locked = "false";
+      } else {
+        wrapper.classList.add("open");
+        wrapper.dataset.locked = "true";
+      }
+    });
+
+    // HOVER (desktop only) → temporary open
+    wrapper.addEventListener("mouseenter", () => {
+      if (
+        wrapper.dataset.locked !== "true" &&
+        window.matchMedia("(hover: hover)").matches
+      ) {
+        closeOthers(wrapper); // 🔥 ensure one at a time
+        wrapper.classList.add("open");
+      }
+    });
+
+    // HOVER OUT → close if not locked
+    wrapper.addEventListener("mouseleave", () => {
+      if (wrapper.dataset.locked !== "true") {
+        wrapper.classList.remove("open");
+      }
+    });
+  });
+
+  // CLICK OUTSIDE → close everything & unlock
+  document.addEventListener("click", () => {
+    wrappers.forEach(wrapper => {
+      wrapper.classList.remove("open");
+      wrapper.dataset.locked = "false";
+    });
+  });
+});
+</script>
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("search");
+  const patientSections = document.querySelectorAll(".patient-section");
+  const noResult = document.getElementById("searchNoResult");
+
+  function removeHighlights(el) {
+  el.querySelectorAll("mark").forEach(m => {
+    m.replaceWith(m.textContent);
+  });
+}
+
+
+  function highlight(el, term) {
+    const regex = new RegExp(`(${term})`, "gi");
+    el.innerHTML = el.textContent.replace(regex, "<mark>$1</mark>");
+  }
+
+  function getMatchScore(name, query) {
+  const n = name.toLowerCase();
+
+  if (n === query) return 3;        // exact match
+  if (n.startsWith(query)) return 2; // prefix match (icons for "i")
+  if (n.includes(query)) return 1;   // contains
+  return 0;
+}
+
+
+  function liveSearch() {
+    const query = searchInput.value.trim().toLowerCase();
+    let anyMatch = false;
+    let matchCount = 0;
+    let firstOpened = false;
+    const sectionsArray = Array.from(patientSections);
+
+// Rank + sort
+sectionsArray.sort((a, b) => {
+  if (!query) return 0;
+
+  const nameA = a.querySelector(".patient-name").textContent.replace("👤", "").trim();
+  const nameB = b.querySelector(".patient-name").textContent.replace("👤", "").trim();
+
+  return getMatchScore(nameB, query) - getMatchScore(nameA, query);
+});
+
+// Re-append in ranked order
+sectionsArray.forEach(section => {
+  section.parentElement.appendChild(section);
+
+  const patientNameEl = section.querySelector(".patient-name");
+  const patientNameText = patientNameEl.textContent;
+  let patientMatch = false;
+
+  removeHighlights(patientNameEl);
+
+  if (query && patientNameText.toLowerCase().includes(query)) {
+    highlight(patientNameEl, query);
+    patientMatch = true;
+  }
+
+  const fileCards = section.querySelectorAll(".card");
+  let fileMatchFound = false;
+
+  fileCards.forEach(card => {
+    const fileNameEl = card.querySelector(".file-name");
+    const fileNameText = fileNameEl.textContent;
+
+    removeHighlights(fileNameEl);
+
+    if (!query) {
+      card.style.display = "";
+      return;
+    }
+
+    if (fileNameText.toLowerCase().includes(query)) {
+      highlight(fileNameEl, query);
+      card.style.display = "";
+      fileMatchFound = true;
+    } else {
+      card.style.display = "none";
+    }
+  });
+
+  const filesContainer = section.querySelector(".patient-files");
+  const toggleBtn = section.querySelector(".patient-toggle");
+
+  if (!query || patientMatch || fileMatchFound) {
+  section.style.display = "";
+  anyMatch = true;
+  matchCount++;
+
+  if (query && !firstOpened) {
+    // 🔥 Open ONLY the top-ranked folder
+    filesContainer.style.display = "block";
+    toggleBtn.classList.add("active");
+    firstOpened = true;
+  } else {
+    // Keep others closed
+    filesContainer.style.display = "none";
+    toggleBtn.classList.remove("active");
+  }
+
+  if (!query) {
+    filesContainer.style.display = "none";
+    toggleBtn.classList.remove("active");
+  }
+} else {
+  section.style.display = "none";
+}
+
+});
+
+
+    noResult.style.display = anyMatch || !query ? "none" : "block";
+
+const counter = document.getElementById("searchCounter");
+if (query && anyMatch) {
+  counter.textContent = `(${matchCount} result${matchCount > 1 ? "s" : ""})`;
+} else {
+  counter.textContent = "";
+}
+
+
+  }
+
+  // 🔥 LIVE SEARCH (typing + deleting)
+  searchInput.addEventListener("input", liveSearch);
+
+  // Optional: keep button usable
+  document.querySelector(".search-box").addEventListener("submit", e => {
+    e.preventDefault();
+    liveSearch();
+  });
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("patientsContainer");
+  const sections = Array.from(container.querySelectorAll(".patient-section"));
+
+  function parseDate(text) {
+    // "Uploaded on: 2024-01-10 14:22"
+    return new Date(text.replace("Uploaded on:", "").trim());
+  }
+
+  function getLatestFileDate(section) {
+    const dateEls = section.querySelectorAll(".file-date");
+    let latest = new Date(0);
+
+    dateEls.forEach(el => {
+      const d = parseDate(el.textContent);
+      if (!isNaN(d) && d > latest) {
+        latest = d;
+      }
+    });
+
+    return latest;
+  }
+
+  // 🔥 Sort by most recent upload
+  sections.sort((a, b) => {
+    return getLatestFileDate(b) - getLatestFileDate(a);
+  });
+
+  // Re-append cleanly
+  sections.forEach(section => {
+    container.appendChild(section);
+
+    const files = section.querySelector(".patient-files");
+    const btn = section.querySelector(".patient-toggle");
+
+    if (files && btn) {
+      files.style.display = "none";
+      btn.classList.remove("active");
+    }
+  });
+
+  // 🔥 Auto-open newest folder
+  if (sections[0]) {
+    const files = sections[0].querySelector(".patient-files");
+    const btn = sections[0].querySelector(".patient-toggle");
+
+    if (files && btn) {
+      files.style.display = "block";
+      btn.classList.add("active");
+    }
+  }
+});
+</script>
+
+
+
+  </body>
+</html>

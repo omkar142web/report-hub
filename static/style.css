@@ -1,0 +1,1153 @@
+/* --- Variables and Globals --- */
+:root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --accent: #38bdf8;
+    --accent-hover: #1f7ca8;
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+    --danger: #ef4444;
+    --success: #10b981;
+    --error-bg: #f97316;
+    --error-text: #2b1100;
+}
+
+* { 
+    box-sizing: border-box; 
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(circle at top left, #1e293b, #0f172a);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+
+a { 
+    color: var(--accent); 
+    text-decoration: none; 
+    font-weight: 500; 
+}
+
+/* --- Layout --- */
+.layout { 
+    display: flex; 
+}
+
+.sidebar {
+    width: 200px;
+    min-height: 100vh;
+    background: rgba(2, 6, 23, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 30px 20px;
+    border-right: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .clinic-logo {
+    font-size: 1.4rem;
+    letter-spacing: 1.5px;
+    margin-bottom: 30px;
+    color: var(--accent);
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    text-decoration: none;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.sidebar a.active {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--accent);
+}
+
+.sidebar a:hover:not(.active) {
+    background: rgba(255,255,255,0.03);
+    color: var(--text-main);
+}
+
+.sidebar .logout {
+    color: var(--danger);
+    margin-top: auto;
+    border-top: 1px solid var(--panel);
+    padding-top: 20px;
+}
+
+.sidebar a.logout:hover {
+    color: var(--danger) !important;   /* keep red */
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.main { 
+    flex: 1; 
+    padding: 40px; 
+    max-width: 1400px; 
+    margin: 0 auto; 
+}
+
+/* --- Components --- */
+
+/* Central Box for Login/Upload */
+.center-box {
+    width: 400px;
+    margin: 100px auto;
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(8px);
+    padding: 35px;
+    border-radius: 18px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.center-box h2 {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    color: var(--text-main);
+}
+
+.login-form {
+    margin: 30px 0;
+}
+
+.form-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+
+/* Form Elements */
+input, button {
+    width: 95%;
+    padding: 15px;
+    border-radius: 10px;
+    border: none;
+    font-size: 1rem;
+}
+
+.center-box form input[type="text"] {
+    margin-top: 15px;
+}
+
+input {
+    background: var(--panel);
+    color: white;
+    border: 1px solid transparent;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
+}
+
+.btn, .primary-btn {
+    margin-top: 15px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #000;
+    cursor: pointer;
+    font-weight: 700;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 1rem;
+    width: 100%;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3);
+}
+
+.btn:hover, .primary-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+/* Drop Zone */
+.drop-zone {
+    margin-top: 15px;
+    padding: 40px 20px;
+    border: 3px dashed var(--panel);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--text-dim);
+    font-size: 1.1rem;
+}
+
+.drop-zone p {
+    margin: 0;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.drop-zone span {
+    font-size: 0.85rem;
+    display: block;
+    margin-top: 5px;
+}
+
+.drop-zone.drag {
+    border-color: var(--accent);
+    background: rgba(56, 189, 248, 0.05);
+    color: var(--accent);
+}
+
+/* Modern Search Bar */
+.search-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 5px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    margin: 40px auto;
+    max-width: 800px;
+}
+
+.search-box input {
+    background: transparent;
+    border: none;
+    padding: 17px 20px;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+}
+
+.search-box input:focus {
+    box-shadow: none; /* Removes the blue glow on focus */
+    /* You could also change it, e.g.: box-shadow: 0 0 0 2px var(--danger); */
+} 
+
+.search-btn {
+    width: auto;
+    min-width: 120px;
+    padding: 14px 32px;
+    border-radius: 14px;
+    margin: 0;
+
+    background: linear-gradient(
+        135deg,
+        var(--accent),
+        var(--accent-hover),
+        var(--accent)
+    );
+    background-size: 200% 200%;
+    background-position: 0% 50%;
+
+    color: #000;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+
+    transition:
+        background-position 0.35s ease,
+        transform 0.15s ease;
+}
+
+.search-btn:hover {
+    background-position: 100% 50%;
+    transform: translateY(-1px);
+}
+
+.search-btn:active {
+    transform: translateY(0);
+}
+
+
+/* Grid & Cards */
+.patient-title {
+    margin-top: 40px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.1rem;
+}
+
+.file-count-badge {
+    background-color: var(--panel);
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+
+
+.patient-files {
+    display: none;
+    padding-left: 10px; /* Slight indent for files */
+    padding-bottom: 25px;  /* i changed this from 10px to 25px */
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 16px;
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    background: rgba(30, 41, 59, 0.8);
+    border-color: var(--accent);
+}
+
+.file-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-date {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.card img, .card iframe {
+    width: 100%;
+    height: 220px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #000;
+    border: none;
+}
+
+.card video {
+    width: 100%;
+    height: 220px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #000;
+    pointer-events: none; /* Disable controls by default */
+}
+
+.card:hover video {
+    pointer-events: auto; /* Enable controls on hover */
+}
+
+/* PDF Preview Placeholder */
+.pdf-preview {
+    width: 100%;
+    height: 220px;
+    border-radius: 10px;
+    background: #000;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-dim);
+}
+
+.pdf-preview p {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    color: var(--text-main);
+}
+
+/* Badges */
+.badge {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+.badge.pdf { background: var(--danger); }
+.badge.img { background: var(--accent); color: #000; }
+.badge.video { background: #9333ea; color: #fff; }
+
+/* Actions */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.actions a {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.actions a:first-child { 
+    background: rgba(255,255,255,0.05); 
+    color: var(--text-main); 
+}
+.actions a:first-child:hover { 
+    background: rgba(255,255,255,0.1); 
+}
+
+.actions .delete {
+    color: var(--danger) !important;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+
+
+
+
+
+
+/* Toast Notification */
+#toast-container {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 16px);
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 9999;
+}
+
+
+.toast {
+    width: min(92vw, 360px);
+    max-width: 360px;
+    padding: 12px 16px;
+    border-radius: 14px;
+
+    display: flex;
+    /* align-items: flex-start; */
+    align-items: center;
+
+    gap: 10px;
+
+    font-weight: 600;
+    font-size: 14px;
+    /* This makes the text sit perfectly centered with the icon. */
+    line-height: 1.2;
+    
+
+    box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+    animation: slideIn 0.4s ease forwards;
+    opacity: 0;
+
+    background: var(--panel);
+    color: white;
+    border-left: 4px solid var(--accent);
+
+    white-space: normal;   /* ❗ important */
+    overflow: hidden;
+}
+
+.toast.show { 
+    opacity: 1; 
+    transform: translateY(0); 
+}
+
+.toast.error {
+    background: linear-gradient(135deg, #f97316, #ef4444);
+    color: var(--error-text);
+    border-left-color: var(--error-text);
+}
+
+.toast.success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border-left-color: #059669;
+}
+
+.toast .icon {
+    font-size: 18px;
+}
+
+.toast .close-btn {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    margin-left: auto;
+
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 50%;
+
+    display: flex;         /* 🔥 key */
+    align-items: center;   /* 🔥 vertical center */
+    justify-content: center;
+
+    padding: 0;            /* 🔥 remove default offset */
+    line-height: 1;        /* 🔥 avoid text baseline shift */
+}
+
+
+.toast .close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.toast:hover {
+    transform: scale(1.02);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+}
+
+@media (max-width: 480px) {
+    .toast {
+        font-size: 13px;
+        padding: 10px 14px;
+        border-radius: 12px;
+    }
+}
+
+
+@keyframes slideIn {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+
+.toast-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+
+    line-height: 1.3;
+    
+    word-break: break-word;
+
+    text-overflow: ellipsis;      /* ✅ adds … */
+    white-space: nowrap;          /* ✅ single line only */
+    max-width: 100%;
+}
+
+.toast .message {
+    flex: 1;
+    min-width: 0;
+
+    display: -webkit-box;
+    
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* --- File List --- */
+#file-list {
+    margin-top: 15px;
+    text-align: left;
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+#file-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.selected-file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    overflow: hidden; /* Add this to contain children */
+}
+
+.selected-file-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 0; /* Prevents the flex item from overflowing */
+}
+
+.selected-file-item:last-child {
+    margin-bottom: 0;
+}
+
+.delete-file-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 0;
+    transition: color 0.2s ease;
+    width: auto; /* Override global button width */
+}
+
+.delete-file-btn:hover {
+    color: var(--danger);
+}
+
+.no-files-selected-message {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 10px 0;
+}
+
+
+
+
+/* --- Utility --- */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.back-link, .doctor-login-link {
+    display: block;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    background-color: var(--panel);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--accent);
+}
+
+.back-link:hover, .doctor-login-link:hover {
+    background-color: var(--accent-hover);
+    color: var(--text-main);
+}
+
+.no-data {
+    text-align: center;
+    margin-top: 50px;
+    color: var(--text-dim);
+}
+
+/* --- Media Queries --- */
+@media (max-width: 768px) {
+    .layout { 
+        flex-direction: column; 
+    }
+    .sidebar { 
+        width: 100%; 
+        min-height: auto; 
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        gap: 10px;
+    }
+    .sidebar h2 { 
+        margin: 0;
+    }
+    .sidebar .logout {
+        margin-top: 0;
+        border-top: none;
+        padding: 8px 15px;
+        background-color: var(--danger);
+        color: white;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .sidebar .logout:hover {
+        background-color: #c13a3a;
+    }
+    .main {
+        padding: 20px;
+    }
+    .center-box {
+        width: 90%;
+        margin: 50px auto;
+        padding: 25px;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+.info-icon {
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-dim);
+    padding: 4px 6px;
+    border-radius: 50%;
+}
+
+.info-icon:hover {
+    color: var(--accent);
+    background: rgba(255,255,255,0.05);
+}
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   ZIP DOWNLOAD BUTTON — FINAL COMBINED VERSION
+   Compatible with patient-info-card, mobile & no overflow
+   ========================================================= */
+
+.zip-btn {
+    margin-top: 10px;
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* compact height for small info card */
+    padding: 6px 8px;
+    padding-left: 20px; /* space reserved for icon */
+
+    border-radius: 999px;
+    background: linear-gradient(135deg, #6f6af8, #7c7cff);
+
+    font-weight: 800;
+    font-size: 12.5px;
+    line-height: 1;
+    letter-spacing: 0.4px;
+    text-align: center;
+
+    color: #0f172a;
+    text-decoration: none;
+    white-space: nowrap;
+
+    position: relative;
+    box-sizing: border-box;
+
+    box-shadow: 0 4px 16px rgba(124, 124, 255, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ---------------------------------------------------------
+   Left circular icon (safe, no layout shift)
+   --------------------------------------------------------- */
+.zip-btn::before {
+    content: "🔻"; /* cleaner than ⬇ */
+
+    position: absolute;
+    left: 0.5px;
+    top: 50%;
+    transform: translateY(-51.2%);
+
+    width: 24px;
+    height: 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(4px);
+
+
+    color: #6f6af8;
+
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+/* ---------------------------------------------------------
+   Hover effects (desktop only, matches your hover rules)
+   --------------------------------------------------------- */
+@media (hover: hover) {
+    .zip-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(124, 124, 255, 0.45);
+    }
+
+    .zip-btn:hover::before {
+        transform: translateY(-50%) scale(1.08);
+    }
+}
+
+/* ---------------------------------------------------------
+   Active / press feedback
+   --------------------------------------------------------- */
+.zip-btn:active {
+    transform: scale(0.96);
+}
+
+/* ---------------------------------------------------------
+   Disabled state (optional, safe)
+   --------------------------------------------------------- */
+.zip-btn.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    box-shadow: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.info-icon {
+    font-size: 12px;           /* smaller ⓘ icon */
+}
+
+
+
+/* --- Truncate long patient name to one line --- */
+.patient-header {
+    white-space: nowrap;        /* stay on one line */
+    overflow: hidden;           /* hide extra text */
+    text-overflow: ellipsis;    /* show ... if needed */
+    max-width: 100%;
+}
+
+
+
+
+
+
+/* =========================================================
+   Header / Sidebar mobile overhang fix (responsive)
+   ========================================================= */
+@media (max-width: 768px) {
+    .layout {
+        flex-direction: column;
+    }
+
+    .sidebar { 
+        width: 100% !important; 
+        min-height: auto; 
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px; /* Controls internal spacing */
+        gap: 10px;
+        
+        /* THE FIX: Ensure padding doesn't add to the width */
+        box-sizing: border-box !important; 
+        overflow: visible; /* allow popups to escape */
+    }
+
+    .sidebar .clinic-logo {
+        margin-bottom: 0 !important;
+        font-size: 1.1rem;
+    }
+
+    .main {
+        width: 100%;
+        padding: clamp(16px, 4vw, 24px);
+        overflow-x: hidden;
+
+        overflow: visible;
+    }
+}
+
+/* Safety net: never allow horizontal scroll */
+body {
+    overflow-x: hidden;
+}
+
+
+
+
+/* =========================================================
+   FINAL — Info Menu (ⓘ) Clean & Stable
+   ========================================================= */
+
+/* Patient row layout */
+.patient-toggle {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+
+    width: 100%;
+    position: relative;
+
+    background: var(--panel);
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+
+    cursor: pointer;
+
+    margin-bottom: 14px;   /* try 12–18px */
+
+    transition: transform 0.15s ease;
+
+
+    overflow: visible; /* allow popup to escape */
+}
+
+/* Patient name (ellipsis works 100%) */
+.patient-name {
+    color: #e5e7eb; /* soft white */
+
+    /* color: var(--text-main);   */   /* bright white */
+
+    /* OR try these alternatives */
+    /* color: #e5e7eb; */         /* soft white */
+    /* color: var(--accent); */   /* blue highlight */
+    /* color: #cbd5f5; */         /* cool gray-blue */
+
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Right side container */
+.patient-info-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.file-count-text {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+
+.info-icon {
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 50%;
+}
+
+.info-icon:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--accent);
+}
+
+/* =========================================================
+   Info popup (default: open DOWN)
+   ========================================================= */
+.patient-info-card {
+    position: absolute;
+    top: calc(100% + 8px);
+    bottom: auto;
+
+    right: clamp(12px, 10vw, 30px);
+
+    /* 👇 combine X + Y movement */
+    transform: translate(-10px, 6px);
+
+    width: min(140px, calc(100vw - 32px));
+    z-index: 1000;
+
+    background: rgba(30, 41, 59, 0.98);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 10px 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+/* Show popup */
+.patient-info-wrapper.open .patient-info-card {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-10px, 0);
+}
+
+
+/* =========================================================
+   LAST TWO patients → open UPWARD (final overflow fix)
+   ========================================================= */
+.patient-section:nth-last-child(-n + 2) .patient-info-card {
+    top: auto;
+    bottom: calc(100% + 12px); /* slightly more breathing room */
+    transform: translate(-10px, -8px);
+}
+
+.patient-section:nth-last-child(-n + 2)
+.patient-info-wrapper.open .patient-info-card {
+    transform: translate(-10px, 0);
+}
+
+
+
+/* Popup content */
+.patient-info-card .patient-header {
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.patient-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.patient-stats div {
+    display: flex;
+    align-items: center;
+    justify-content: center;   /* 🔥 centers icon + text */
+    gap: 8px;
+}
+
+
+.patient-toggle:hover .patient-name {
+    color: var(--accent);
+}
+
+/* Hover effect (desktop only) */
+@media (hover: hover) {
+    .patient-toggle:hover:not(:has(.patient-info-wrapper.open)) {
+        transform: translateY(-2px);
+    }
+}
+
+/* Prevent hover transform when popup is open */
+.patient-toggle:has(.patient-info-wrapper.open) {
+    transform: none !important;
+    z-index: 50;
+}
+
+
+
+/* Search highlight */
+mark {
+    background: rgba(56, 189, 248, 0.35);
+    color: #fff;
+    padding: 0 2px;
+    border-radius: 4px;
+}
+
+/* No result message (search-specific) */
+.search-no-result {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 1rem;
+    color: var(--text-dim);
+    display: none;
+}
+
+/* Inline search result counter (matches "(2 files)" style) */
+.search-count-inline {
+    font-size: 1.0rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+
+    padding: 0 6px;
+    margin: 0 6px;
+
+    opacity: 0.9;
+}
+
+
+@media (min-width: 769px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+
+        height: 100vh;
+        overflow-y: auto;
+
+        /* keep original width */
+        width: 200px;
+
+        scrollbar-width: thin;
+    }
+
+    .main {
+        margin-left: 200px; /* same as sidebar width */
+    }
+}

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Report</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+    />
+  </head>
+  <body>
+    <div class="center-box">
+      <h2>📤 Upload Patient Reports</h2>
+
+      <form
+        id="upload-form"
+        action="{{ url_for('index') }}"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <input
+          type="text"
+          name="patient"
+          placeholder="Enter Patient's Number / Name here 😗"
+          required
+        />
+
+        <div class="drop-zone">
+          <input type="file" name="report" id="report-input" multiple hidden />
+          <p>Drag & Drop files here or <span>Click to select</span></p>
+          <small>Supports: PDF, PNG, JPG, GIF, MP4, MOV</small>
+        </div>
+
+        <div id="file-list"></div>
+
+        <button type="submit" class="primary-btn">Upload</button>
+      </form>
+
+      <button
+        onclick="window.location.href='{{ url_for('login') }}'"
+        class="doctor-login-link"
+        aria-label="Doctor Login"
+      >
+        Doctor Login
+      </button>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='upload.js') }}"></script>
+
+    <footer
+  style="text-align: center; padding: 15px; color: #94a3b8; font-size: 14px"
+>
+  Inspired by 
+  <a href="https://docs.google.com/document/d/1Doot0IgAGeDJlbJW_Oru8Hv06RMU9UsqS6qdtja1ubc/edit?usp=sharing" 
+     target="_blank" 
+     style="color:#38bdf8;">
+    Rutu 😗
+  </a>
+  • Built with ChatGPT • Assisted by Gemini • Powered by Curiosity • Visualized by 
+  <a href="https://docs.google.com/document/d/1Doot0IgAGeDJlbJW_Oru8Hv06RMU9UsqS6qdtja1ubc/edit?usp=sharing" 
+     target="_blank" 
+     style="color:#38bdf8;">
+    OP
+  </a>
+</footer>
+
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <script>
+      showToast("{{ message }}", "{{ category }}");
+    </script>
+    {% endfor %} {% endif %} {% endwith %}
+
+
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const nameInput = document.querySelector('input[name="patient"]');
+  const form = document.getElementById("upload-form");
+
+  if (!nameInput || !form) return;
+
+  nameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // stop accidental reload
+      form.requestSubmit(); // acts exactly like clicking Upload
+    }
+  });
+});
+</script>
+
+
+
+  </body>
+</html>

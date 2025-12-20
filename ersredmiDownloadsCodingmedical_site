@@ -1,0 +1,60 @@
+[1mdiff --git a/app.py b/app.py[m
+[1mindex 21fd272..faa233c 100644[m
+[1m--- a/app.py[m
+[1m+++ b/app.py[m
+[36m@@ -154,39 +154,33 @@[m [mdef reports():[m
+     resources = cloudinary.api.resources([m
+         type="upload", [m
+         max_results=500,[m
+[31m-        expression=expression,[m
+[31m-        with_field="folder"[m
+[32m+[m[32m        expression=expression[m
+     )[m
+         [m
+     for res in resources.get("resources", []):[m
+[31m-        # The patient name is the folder name from Cloudinary.[m
+[31m-        # CRITICAL: If a file has no folder, it's a root-level file. Skip it.[m
+[31m-        patient_name = res.get("folder")[m
+[31m-        if not patient_name:[m
+[31m-            continue[m
+[32m+[m[32m        public_id = res["public_id"][m
+[32m+[m
+[32m+[m[32m        # Skip root-level files by checking for a separator in the public_id[m
+[32m+[m[32m        if "/" not in public_id:[m
+[32m+[m[32m            continue[m[41m  [m
+[32m+[m
+[32m+[m[32m        # The folder is the first part of the public_id[m
+[32m+[m[32m        patient_name = public_id.split("/")[0][m
+ [m
+         upload_date = datetime.strptime([m
+             res["created_at"], "%Y-%m-%dT%H:%M:%SZ"[m
+         ).strftime('%b %d, %Y')[m
+ [m
+[31m-        original_filename = f"{res['public_id'].split('/')[-1]}.{res['format']}"[m
+[31m-[m
+         file_obj = {[m
+[31m-            'name': original_filename,[m
+[31m-            'date': upload_date,[m
+[31m-            'url': res['secure_url'],[m
+[31m-            'public_id': res['public_id'],[m
+[31m-            'is_pdf': res['resource_type'] == 'image' and res['format'] == 'pdf'[m
+[32m+[m[32m            "name": f"{public_id.split('/')[-1]}.{res['format']}",[m
+[32m+[m[32m            "date": upload_date,[m
+[32m+[m[32m            "url": res["secure_url"],[m
+[32m+[m[32m            "public_id": public_id,[m
+[32m+[m[32m            "is_pdf": res["format"] == "pdf"[m
+         }[m
+ [m
+[31m-        # Group files by patient[m
+[31m-        if patient_name not in data:[m
+[31m-            data[patient_name] = [][m
+[31m-        data[patient_name].append(file_obj)[m
+[31m-[m
+[31m-    # Sort files within each patient group by date[m
+[31m-    for patient in data:[m
+[31m-        data[patient].sort(key=lambda x: x['date'], reverse=True)[m
+[32m+[m[32m        # Use setdefault for cleaner grouping[m
+[32m+[m[32m        data.setdefault(patient_name, []).append(file_obj)[m
+ [m
+     return render_template("reports.html", data=data, search=search)[m
+ [m
