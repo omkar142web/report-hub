@@ -19,6 +19,7 @@ import cloudinary.api
 DOCTOR_MAP = {
     "dr_rutu": "apollo_mumbai",
     "dr_omkar": "apollo_mumbai",
+    "op": "another_hospital",
 }
 
 
@@ -341,22 +342,33 @@ def upload_doctor(doctor_code):
 def reports_hospital(hospital_code):
     hospital_code = hospital_code.lower()
 
-    # Validate hospital
     if hospital_code not in set(DOCTOR_MAP.values()):
         return "Invalid hospital", 404
 
     prefix = f"{hospital_code}/"
     data = build_reports_data(prefix=prefix)
 
-    return render_template("reports.html", data=data, search="")
+    return render_template(
+        "reports.html",
+        data=data,
+        search="",
+        view="hospital"
+    )
+
 
 
 
 @app.route("/reports")
 @login_required
 def reports():
-    data = build_reports_data(prefix="apollo_mumbai/")
-    return render_template("reports.html", data=data, search="")
+    data = build_reports_data(prefix=None)  # show all
+    return render_template(
+        "reports.html",
+        data=data,
+        search="",
+        view="all"
+    )
+
 
 
 @app.route("/reports/d/<doctor_code>")
@@ -368,12 +380,16 @@ def reports_doctor(doctor_code):
         return "Invalid doctor", 404
 
     hospital = DOCTOR_MAP[doctor_code]
-
-    # 🔍 Only THIS doctor's files
     prefix = f"{hospital}/{doctor_code}/"
-    full_data = build_reports_data(prefix=prefix)
+    data = build_reports_data(prefix=prefix)
 
-    return render_template("reports.html", data=full_data, search="")
+    return render_template(
+        "reports.html",
+        data=data,
+        search="",
+        view="doctor"
+    )
+
 
 
 
@@ -405,26 +421,24 @@ def delete_file():
 
 
 
-@app.route("/download-patient/<patient>")
+@app.route("/download-patient/<hospital>/<doctor>/<patient>")
 @login_required
-def download_patient_zip(patient):
-    """
-    Download ALL files of a patient as a ZIP
-    """
+def download_patient_zip(hospital, doctor, patient):
     patient = clean_name(patient)
 
-    # Get all files for this patient from Cloudinary
+    prefix = f"{hospital}/{doctor}/{patient}/"
+
     result_img = cloudinary.api.resources(
         type="upload",
         resource_type="image",
-        prefix=f"{patient}/",
+        prefix=prefix,
         max_results=500
     )
 
     result_vid = cloudinary.api.resources(
         type="upload",
         resource_type="video",
-        prefix=f"{patient}/",
+        prefix=prefix,
         max_results=500
     )
 
@@ -456,6 +470,7 @@ def download_patient_zip(patient):
         as_attachment=True,
         download_name=f"{patient}_reports.zip"
     )
+
 
 
 

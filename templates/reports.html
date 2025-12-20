@@ -10,7 +10,7 @@
   <body>
     <div class="layout">
       <div class="sidebar">
-        <a href="{{ url_for('reports') }}" class="clinic-logo"> Clinic</a>
+        <a href="{{ url_for('reports') }}" class="clinic-logo">🩺 Clinic</a>
         <a href="{{ url_for('logout') }}" class="logout">Logout</a>
       </div>
 
@@ -43,19 +43,45 @@
 
           {% for hospital, doctors in data.items() %}
             {% set h.i = h.i + 1 %}
-            <section class="hospital-section">
+            <!-- <section class="hospital-section">
               <button class="group-toggle hospital-toggle" onclick="toggleGroup('hospital-{{ h.i }}')">
                 🏥 {{ hospital.replace("_", " ") | title }}
               </button>
 
-              <div class="group-body" id="hospital-{{ h.i }}">
+              <div class="group-body" id="hospital-{{ h.i }}"> -->
+
+                <section class="hospital-section">
+
+                {% if view == "all" %}
+                <button class="group-toggle hospital-toggle"
+                        onclick="toggleGroup('hospital-{{ h.i }}')">
+                  🏥 {{ hospital.replace("_", " ") | upper }}
+                </button>
+                {% endif %}
+
+                <div class="group-body"
+                    id="hospital-{{ h.i }}"
+                    {% if view != "all" %}style="display:block"{% endif %}>
+
+
                 {% for doctor, patients in doctors.items() %}
                   <section class="doctor-section">
-                    <button class="group-toggle doctor-toggle" onclick="toggleGroup('doctor-{{ h.i }}-{{ loop.index }}')">
-                      👨‍⚕️ {{ doctor.replace("_", " ") | title }}
+                    {% if view != "doctor" %}
+                    <button class="group-toggle doctor-toggle"
+                            onclick="toggleGroup('doctor-{{ h.i }}-{{ loop.index }}')">
+                      👨‍⚕️ {{ doctor.replace("_", " ") | upper }}
                     </button>
+                    {% endif %}
 
-                    <div class="group-body doctor-body" id="doctor-{{ h.i }}-{{ loop.index }}" style="display: none;">
+
+                        <div class="group-body doctor-body"
+                          id="doctor-{{ h.i }}-{{ loop.index }}"
+                          {% if view == "doctor" %}
+                            style="display:block"
+                          {% else %}
+                            style="display:none"
+                          {% endif %}>
+
                       {% for patient, patient_data in patients.items() %}
                         {% set idx.i = idx.i + 1 %}
 
@@ -75,9 +101,15 @@
                                   <div>🎞️ Videos : {{ patient_data.video_count }}</div>
                                 </div>
 
-                                <a href="{{ url_for('download_patient_zip', patient=patient) }}" class="zip-btn" onclick="event.stopPropagation()">
+                                <a href="{{ url_for(
+                                    'download_patient_zip',
+                                    hospital=hospital,
+                                    doctor=doctor,
+                                    patient=patient
+                                ) }}" class="zip-btn" onclick="event.stopPropagation()">
                                   Download
                                 </a>
+
                               </div>
                             </div>
                           </button>
