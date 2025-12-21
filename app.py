@@ -282,41 +282,56 @@ def login():
     if request.method == "POST":
         password = request.form.get("password", "")
 
-        # 👨‍⚕️ Doctor login
-        if target and target.startswith("doctor:"):
-            doctor_code = target.split(":")[1]
+        # 1️⃣ If login_target exists → respect it
+        if target:
+            if target.startswith("doctor:"):
+                doctor_code = target.split(":")[1]
+                if doctor_code in DOCTOR_PASSWORDS and \
+                   check_password_hash(DOCTOR_PASSWORDS[doctor_code], password):
 
-            if doctor_code in DOCTOR_PASSWORDS and \
-               check_password_hash(DOCTOR_PASSWORDS[doctor_code], password):
+                    session.clear()
+                    session["doctor_auth"] = doctor_code
+                    return redirect(url_for("reports_doctor", doctor_code=doctor_code))
 
-                session["doctor_auth"] = doctor_code
-                session.pop("login_target", None)
-                return redirect(url_for("reports_doctor", doctor_code=doctor_code))
-            else:
                 error = "Invalid doctor password"
 
-        # 🏥 Hospital login
-        elif target and target.startswith("hospital:"):
-            hospital_code = target.split(":")[1]
+            elif target.startswith("hospital:"):
+                hospital_code = target.split(":")[1]
+                if hospital_code in HOSPITAL_PASSWORDS and \
+                   check_password_hash(HOSPITAL_PASSWORDS[hospital_code], password):
 
-            if hospital_code in HOSPITAL_PASSWORDS and \
-               check_password_hash(HOSPITAL_PASSWORDS[hospital_code], password):
+                    session.clear()
+                    session["hospital_auth"] = hospital_code
+                    return redirect(url_for("reports_hospital", hospital_code=hospital_code))
 
-                session["hospital_auth"] = hospital_code
-                session.pop("login_target", None)
-                return redirect(url_for("reports_hospital", hospital_code=hospital_code))
-            else:
                 error = "Invalid hospital password"
 
-        # 🧑‍💼 Admin login
+        # 2️⃣ No target → try ALL roles safely (fallback)
         else:
+            # Try doctor passwords
+            for doctor_code, hash_val in DOCTOR_PASSWORDS.items():
+                if check_password_hash(hash_val, password):
+                    session.clear()
+                    session["doctor_auth"] = doctor_code
+                    return redirect(url_for("reports_doctor", doctor_code=doctor_code))
+
+            # Try hospital passwords
+            for hospital_code, hash_val in HOSPITAL_PASSWORDS.items():
+                if check_password_hash(hash_val, password):
+                    session.clear()
+                    session["hospital_auth"] = hospital_code
+                    return redirect(url_for("reports_hospital", hospital_code=hospital_code))
+
+            # Try admin password
             if PASSWORD_HASH and check_password_hash(PASSWORD_HASH, password):
+                session.clear()
                 session["doctor"] = True
                 return redirect(url_for("reports"))
-            else:
-                error = "Invalid password"
+
+            error = "Invalid password"
 
     return render_template("login.html", error=error)
+
 
 
 
@@ -440,14 +455,9 @@ def reports_doctor(doctor_code):
     if doctor_code not in DOCTOR_MAP:
         return "Invalid doctor", 404
 
-    # 🔐 not logged in
-    if not session.get("doctor_auth"):
-        session["login_target"] = f"doctor:{doctor_code}"
-        return redirect(url_for("login"))
-
-    # 🔐 wrong doctor logged in
-    if session["doctor_auth"] != doctor_code:
-        session.clear()
+    # 🔐 not logged in OR wrong doctor
+    if session.get("doctor_auth") != doctor_code:
+        session.pop("doctor_auth", None)
         session["login_target"] = f"doctor:{doctor_code}"
         return redirect(url_for("login"))
 
@@ -461,6 +471,7 @@ def reports_doctor(doctor_code):
         search="",
         view="doctor"
     )
+
 
 
 
@@ -538,7 +549,6 @@ def download_patient_zip(hospital, doctor, patient):
         as_attachment=True,
         download_name=f"{patient}_reports.zip"
     )
-
 
 
 
