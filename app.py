@@ -282,71 +282,84 @@ def login():
     if request.method == "POST":
         password = request.form.get("password", "")
 
-        # 1️⃣ If login_target exists → respect it
+        # 1️⃣ Targeted login
         if target:
             if target.startswith("doctor:"):
                 doctor_code = target.split(":")[1]
-                if doctor_code in DOCTOR_PASSWORDS and \
-                   check_password_hash(DOCTOR_PASSWORDS[doctor_code], password):
-
+                if doctor_code in DOCTOR_PASSWORDS and check_password_hash(
+                    DOCTOR_PASSWORDS[doctor_code], password
+                ):
                     session.clear()
                     session["doctor_auth"] = doctor_code
+                    session["login_role"] = "doctor"
                     return redirect(url_for("reports_doctor", doctor_code=doctor_code))
-
                 error = "Invalid doctor password"
 
             elif target.startswith("hospital:"):
                 hospital_code = target.split(":")[1]
-                if hospital_code in HOSPITAL_PASSWORDS and \
-                   check_password_hash(HOSPITAL_PASSWORDS[hospital_code], password):
-
+                if hospital_code in HOSPITAL_PASSWORDS and check_password_hash(
+                    HOSPITAL_PASSWORDS[hospital_code], password
+                ):
                     session.clear()
                     session["hospital_auth"] = hospital_code
+                    session["login_role"] = "hospital"
                     return redirect(url_for("reports_hospital", hospital_code=hospital_code))
-
                 error = "Invalid hospital password"
 
-        # 2️⃣ No target → try ALL roles safely (fallback)
+        # 2️⃣ Fallback (direct login page access)
         else:
-            # Try doctor passwords
             for doctor_code, hash_val in DOCTOR_PASSWORDS.items():
                 if check_password_hash(hash_val, password):
                     session.clear()
                     session["doctor_auth"] = doctor_code
+                    session["login_role"] = "doctor"
                     return redirect(url_for("reports_doctor", doctor_code=doctor_code))
 
-            # Try hospital passwords
             for hospital_code, hash_val in HOSPITAL_PASSWORDS.items():
                 if check_password_hash(hash_val, password):
                     session.clear()
                     session["hospital_auth"] = hospital_code
+                    session["login_role"] = "hospital"
                     return redirect(url_for("reports_hospital", hospital_code=hospital_code))
 
-            # Try admin password
             if PASSWORD_HASH and check_password_hash(PASSWORD_HASH, password):
                 session.clear()
                 session["doctor"] = True
+                session["login_role"] = "admin"
                 return redirect(url_for("reports"))
 
             error = "Invalid password"
 
-    return render_template("login.html", error=error)
+    # ✅ ALWAYS RETURN ON GET OR FAILED POST
+    return render_template(
+        "login.html",
+        error=error,
+        role=session.get("login_role"),
+        target=target,
+    )
+
+
 
 
 
 
 @app.route("/logout")
 def logout():
+    role = session.get("login_role")   # ✅ read BEFORE clearing
     session.clear()
-    # flash("Logged out successfully 👋", "success")
-    if session.get("doctor_auth"):
+
+    if role == "doctor":
         flash("Doctor logged out successfully 👨‍⚕️", "success")
-    elif session.get("hospital_auth"):
+    elif role == "hospital":
         flash("Hospital logged out successfully 🏥", "success")
+    elif role == "admin":
+        flash("Admin logged out successfully 🧑‍💼", "success")
     else:
         flash("Logged out successfully 👋", "success")
 
-        return redirect(url_for("login"))
+    return redirect(url_for("login"))   # ✅ ALWAYS return
+
+
 
 
 
