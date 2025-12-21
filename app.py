@@ -536,7 +536,14 @@ def reports_data():
     if not session.get("doctor"):
         flash("Admin access only", "error")
         return redirect(url_for("reports"))
-    return render_template("reports_data.html", doctor_map=DOCTOR_MAP)
+
+    auth = load_auth()   # ✅ READ FULL AUTH FILE
+
+    return render_template(
+        "reports_data.html",
+        auth=auth
+    )
+
 
 
 @app.route("/api/add-entity", methods=["POST"])
