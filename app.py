@@ -353,9 +353,9 @@ def logout():
     elif role == "hospital":
         flash("Hospital logged out successfully 🏥", "success")
     elif role == "admin":
-        flash("Admin logged out successfully 🤧", "success")
+        flash("Admin logged out successfully 🛡️", "success")
     else:
-        flash("Logged out successfully 🛡️", "success")
+        flash("Logged out successfully 🐦‍🔥", "success")
 
     return redirect(url_for("login"))   # ✅ ALWAYS return
 
