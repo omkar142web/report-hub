@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Auth Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <a href="{{ url_for('reports') }}" class="clinic-logo">Clinic</a>
+      <a href="{{ url_for('logout') }}" class="logout">Logout</a>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <h1>🔐 Auth Management</h1>
+
+      <!-- FILTER BAR (replaces search) -->
+      <div class="search-box">
+        <button id="filterToggle" class="btn">
+          🔁 View: Hospital → Doctors
+        </button>
+      </div>
+
+      <!-- DATA CONTAINER -->
+      <div id="dataContainer"></div>
+
+    </div>
+  </div>
+
+  <script>
+  const doctorMap = {{ doctor_map | tojson }};
+  const hospitalMap = {};
+  let currentTarget = null;
+
+  for (const [doctor, hospital] of Object.entries(doctorMap)) {
+    if (!hospitalMap[hospital]) hospitalMap[hospital] = [];
+    hospitalMap[hospital].push(doctor);
+  }
+
+  let viewMode = "hospital_doctors";
+  const container = document.getElementById("dataContainer");
+  const toggleBtn = document.getElementById("filterToggle");
+
+  function openModal(type, id) {
+    currentTarget = { type, id };
+    document.getElementById("modalTitle").innerText =
+      `Change ${type} password`;
+    document.getElementById("newPassword").value = "";
+    document.getElementById("passwordModal").classList.remove("hidden");
+  }
+
+  function closeModal() {
+    document.getElementById("passwordModal").classList.add("hidden");
+  }
+
+  async function submitPassword() {
+  const pw = document.getElementById("newPassword").value.trim();
+  const confirm = document.getElementById("confirmPassword").value.trim();
+
+  if (!pw) {
+    alert("Password required");
+    return;
+  }
+
+  if (pw !== confirm) {
+    alert("Passwords do not match");
+    return;
+  }
+
+  const res = await fetch("/api/change-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: currentTarget.type,
+      id: currentTarget.id,
+      new_password: pw,
+    }),
+  });
+
+  const data = await res.json();
+  if (data.success) {
+    closeModal();
+    alert("Password updated successfully");
+  } else {
+    alert(data.error || "Failed");
+  }
+}
+
+  function renderHospitalDoctors() {
+    container.innerHTML = "";
+    for (const hospital in hospitalMap) {
+      const block = document.createElement("div");
+      block.className = "patient-toggle";
+
+      let html = `<strong>🏥 ${hospital.replaceAll("_"," ")}</strong><br>`;
+
+      hospitalMap[hospital].forEach(doc => {
+        html += `
+          <div style="margin-left:16px;margin-top:6px;">
+            👨‍⚕️ ${doc}
+            <button class="btn"
+              onclick="openModal('doctor','${doc}')"
+              style="margin-left:10px;">
+              Change Password
+            </button>
+          </div>`;
+      });
+
+      block.innerHTML = html;
+      container.appendChild(block);
+    }
+  }
+
+  function renderHospitalsOnly() {
+    container.innerHTML = "";
+    for (const hospital in hospitalMap) {
+      const block = document.createElement("div");
+      block.className = "patient-toggle";
+
+      block.innerHTML = `
+        <strong>🏥 ${hospital.replaceAll("_"," ")}</strong>
+        <button class="btn"
+          onclick="openModal('hospital','${hospital}')"
+          style="margin-left:12px;">
+          Change Password
+        </button>`;
+
+      container.appendChild(block);
+    }
+  }
+
+  toggleBtn.onclick = () => {
+    if (viewMode === "hospital_doctors") {
+      viewMode = "hospitals_only";
+      toggleBtn.innerText = "🔁 View: Hospitals Only";
+      renderHospitalsOnly();
+    } else {
+      viewMode = "hospital_doctors";
+      toggleBtn.innerText = "🔁 View: Hospital → Doctors";
+      renderHospitalDoctors();
+    }
+  };
+
+  renderHospitalDoctors();
+</script>
+
+
+
+<!-- PASSWORD MODAL -->
+<div id="passwordModal" class="modal hidden">
+  <div class="modal-box">
+    <h3 id="modalTitle">Change Password</h3>
+
+    <input type="password" id="newPassword" placeholder="New password" class="input" />
+<input type="password" id="confirmPassword" placeholder="Confirm password" class="input" />
+<small id="pwHint" style="opacity:0.7;"></small>
+
+
+    <div class="modal-actions">
+      <button class="btn danger" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="submitPassword()">Save</button>
+    </div>
+  </div>
+</div>
+
+<br>
+<div style="font-size:12px;opacity:0.7;margin-bottom:8px;">&nbsp;&nbsp;
+  Logged in as: <strong>ADMIN</strong>
+</div>
+
+
+</body>
+</html>

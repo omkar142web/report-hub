@@ -6,6 +6,8 @@ import os
 from datetime import datetime
 import re
 
+import time
+
 import io
 import zipfile
 import requests
@@ -14,25 +16,43 @@ from flask import send_file
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+import json
+import re
 
 
-DOCTOR_MAP = {
-    "dr_rutu": "apollo_mumbai",
-    "dr_omkar": "apollo_mumbai",
-    "op": "another_hospital",
-}
 
-DOCTOR_PASSWORDS = {
-    "dr_rutu": generate_password_hash("rutu1"),
-    "dr_omkar": generate_password_hash("omkar1"),
-    "op": generate_password_hash("op1"),
-}
+AUTH_FILE = "data/auth.json"
 
-HOSPITAL_PASSWORDS = {
-    "apollo_mumbai": generate_password_hash("apollo1"),
-    "another_hospital": generate_password_hash("another1"),
-}
+def load_auth():
+    with open(AUTH_FILE, "r") as f:
+        return json.load(f)
 
+def save_auth(data):
+    with open(AUTH_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def build_auth_maps():
+    auth = load_auth()
+
+    doctor_map = {}
+    doctor_passwords = {}
+    hospital_passwords = {}
+
+    # Hospitals
+    for hospital, data in auth["hospitals"].items():
+        hospital_passwords[hospital] = data["password_hash"]
+
+    # Doctors
+    for doctor, data in auth["doctors"].items():
+        doctor_map[doctor] = data["hospital"]
+        doctor_passwords[doctor] = data["password_hash"]
+
+    return doctor_map, doctor_passwords, hospital_passwords
+
+
+
+DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS = build_auth_maps()
 
 
 
@@ -50,6 +70,27 @@ cloudinary.config(
 PASSWORD_HASH = os.environ.get("DOCTOR_PASSWORD_HASH")
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'webm'}
 
+
+def validate_password_version():
+    auth = load_auth()
+
+    if session.get("doctor_auth"):
+        d = session["doctor_auth"]
+        if session.get("password_version") != auth["doctors"][d]["password_updated_at"]:
+            session.clear()
+            return False
+
+    if session.get("hospital_auth"):
+        h = session["hospital_auth"]
+        if session.get("password_version") != auth["hospitals"][h]["password_updated_at"]:
+            session.clear()
+            return False
+
+    return True
+
+
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -59,8 +100,14 @@ def login_required(f):
             or session.get("hospital_auth")
         ):
             return redirect(url_for("login"))
+
+        if not validate_password_version():
+            flash("Password changed. Please log in again.", "error")
+            return redirect(url_for("login"))
+
         return f(*args, **kwargs)
     return decorated_function
+
 
 
 
@@ -482,10 +529,60 @@ def reports():
 @app.route("/reports/data")
 @login_required
 def reports_data():
-    return render_template(
-        "reports_data.html",
-        doctor_map=DOCTOR_MAP,
-    )
+    if not session.get("doctor"):
+        flash("Admin access only", "error")
+        return redirect(url_for("reports"))
+    return render_template("reports_data.html", doctor_map=DOCTOR_MAP)
+
+
+@app.route("/api/change-password", methods=["POST"])
+@login_required
+def api_change_password():
+    # 🔐 Admin only
+    if not session.get("doctor"):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    payload = request.get_json()
+    if not payload:
+        return jsonify({"error": "Invalid payload"}), 400
+
+    entity_type = payload.get("type")
+    entity_id = payload.get("id")
+    new_password = payload.get("new_password")
+
+    if not all([entity_type, entity_id, new_password]):
+        return jsonify({"error": "Missing fields"}), 400
+
+    
+
+    auth = load_auth()
+
+    now = int(time.time())
+
+    if entity_type == "doctor":
+        if entity_id not in auth["doctors"]:
+            return jsonify({"error": "Doctor not found"}), 404
+
+        auth["doctors"][entity_id]["password_hash"] = generate_password_hash(new_password)
+        auth["doctors"][entity_id]["password_updated_at"] = now
+
+    elif entity_type == "hospital":
+        if entity_id not in auth["hospitals"]:
+            return jsonify({"error": "Hospital not found"}), 404
+
+        auth["hospitals"][entity_id]["password_hash"] = generate_password_hash(new_password)
+        auth["hospitals"][entity_id]["password_updated_at"] = now
+
+    else:
+        return jsonify({"error": "Invalid type"}), 400
+
+    save_auth(auth)
+
+    # 🔁 refresh in-memory auth
+    global DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS
+    DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS = build_auth_maps()
+
+    return jsonify({"success": True})
 
 
 
