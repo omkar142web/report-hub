@@ -53,10 +53,15 @@ ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'webm'}
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get("doctor"):
-            return redirect(url_for('login'))  # ✅ correct
+        if not (
+            session.get("doctor")
+            or session.get("doctor_auth")
+            or session.get("hospital_auth")
+        ):
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
     return decorated_function
+
 
 
 
@@ -217,7 +222,13 @@ def upload_hospital(hospital_code):
         })
 
     # GET → same upload UI
-    return render_template("index.html")
+    display_name = hospital_code.replace("_", " ").title()
+
+    return render_template(
+        "index.html",
+        upload_title=f"📤 Upload Files to {display_name}"
+    )
+
 
 
 
@@ -269,7 +280,11 @@ def index():
             success_message = f"{uploaded_count} file(s) uploaded for {patient}."
             return jsonify({"success": success_message})
 
-    return render_template("index.html")
+    return render_template(
+    "index.html",
+    upload_title="📤 Upload Private Reports Only ⚠️"
+)
+
 
 
 
@@ -411,7 +426,13 @@ def upload_doctor(doctor_code):
         })
 
     # 3️⃣ GET → reuse existing upload UI
-    return render_template("index.html")
+    display_name = f"Dr {doctor_code.replace('dr_', '').title()}"
+
+    return render_template(
+        "index.html",
+        upload_title=f"📤 Uploading Files for {display_name}"
+    )
+
 
 
 @app.route("/reports/h/<hospital_code>")
