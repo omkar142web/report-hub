@@ -338,7 +338,16 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    # flash("Logged out successfully 👋", "success")
+    if session.get("doctor_auth"):
+        flash("Doctor logged out successfully 👨‍⚕️", "success")
+    elif session.get("hospital_auth"):
+        flash("Hospital logged out successfully 🏥", "success")
+    else:
+        flash("Logged out successfully 👋", "success")
+
+        return redirect(url_for("login"))
+
 
 
 
