@@ -376,6 +376,8 @@ def login():
                     session["doctor_auth"] = doctor_code
                     session["login_role"] = "doctor"
                     return redirect(url_for("reports_doctor", doctor_code=doctor_code))
+                session["password_version"] = load_auth()["doctors"][doctor_code]["password_updated_at"]
+
 
             for hospital_code, hash_val in HOSPITAL_PASSWORDS.items():
                 if check_password_hash(hash_val, password):
@@ -383,6 +385,8 @@ def login():
                     session["hospital_auth"] = hospital_code
                     session["login_role"] = "hospital"
                     return redirect(url_for("reports_hospital", hospital_code=hospital_code))
+                session["password_version"] = load_auth()["hospitals"][hospital_code]["password_updated_at"]
+
 
             if PASSWORD_HASH and check_password_hash(PASSWORD_HASH, password):
                 session.clear()
@@ -535,55 +539,114 @@ def reports_data():
     return render_template("reports_data.html", doctor_map=DOCTOR_MAP)
 
 
-@app.route("/api/change-password", methods=["POST"])
+@app.route("/api/add-entity", methods=["POST"])
 @login_required
-def api_change_password():
-    # 🔐 Admin only
+def api_add_entity():
     if not session.get("doctor"):
         return jsonify({"error": "Unauthorized"}), 403
 
-    payload = request.get_json()
-    if not payload:
-        return jsonify({"error": "Invalid payload"}), 400
+    data = request.get_json()
+    entity_type = data.get("type")     # hospital | doctor
+    entity_id = data.get("id")         # code
+    hospital = data.get("hospital")    # only for doctor
+    password = data.get("password")
 
-    entity_type = payload.get("type")
-    entity_id = payload.get("id")
-    new_password = payload.get("new_password")
-
-    if not all([entity_type, entity_id, new_password]):
+    if not all([entity_type, entity_id, password]):
         return jsonify({"error": "Missing fields"}), 400
 
-    
-
     auth = load_auth()
-
     now = int(time.time())
 
-    if entity_type == "doctor":
-        if entity_id not in auth["doctors"]:
-            return jsonify({"error": "Doctor not found"}), 404
+    if entity_type == "hospital":
+        if entity_id in auth["hospitals"]:
+            return jsonify({"error": "Hospital already exists"}), 400
 
-        auth["doctors"][entity_id]["password_hash"] = generate_password_hash(new_password)
-        auth["doctors"][entity_id]["password_updated_at"] = now
+        auth["hospitals"][entity_id] = {
+            "password_hash": generate_password_hash(password),
+            "password_updated_at": now
+        }
 
-    elif entity_type == "hospital":
-        if entity_id not in auth["hospitals"]:
-            return jsonify({"error": "Hospital not found"}), 404
+    elif entity_type == "doctor":
+        if not hospital or hospital not in auth["hospitals"]:
+            return jsonify({"error": "Invalid hospital"}), 400
 
-        auth["hospitals"][entity_id]["password_hash"] = generate_password_hash(new_password)
-        auth["hospitals"][entity_id]["password_updated_at"] = now
+        if entity_id in auth["doctors"]:
+            return jsonify({"error": "Doctor already exists"}), 400
+
+        auth["doctors"][entity_id] = {
+            "hospital": hospital,
+            "password_hash": generate_password_hash(password),
+            "password_updated_at": now
+        }
 
     else:
         return jsonify({"error": "Invalid type"}), 400
 
     save_auth(auth)
 
-    # 🔁 refresh in-memory auth
     global DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS
     DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS = build_auth_maps()
 
     return jsonify({"success": True})
 
+
+@app.route("/api/delete-entity", methods=["POST"])
+@login_required
+def api_delete_entity():
+    if not session.get("doctor"):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+    entity_type = data.get("type")
+    entity_id = data.get("id")
+
+    auth = load_auth()
+
+    if entity_type == "doctor":
+        if entity_id not in auth["doctors"]:
+            return jsonify({"error": "Doctor not found"}), 404
+
+        hospital = auth["doctors"][entity_id]["hospital"]
+
+        # 🔥 DELETE ALL CLOUDINARY FILES
+        cloudinary.api.delete_resources_by_prefix(
+            f"{hospital}/{entity_id}/"
+        )
+
+        # 🔥 DELETE EMPTY FOLDERS (important)
+        cloudinary.api.delete_folder(f"{hospital}/{entity_id}")
+
+        # ❌ DELETE FROM AUTH
+        del auth["doctors"][entity_id]
+
+
+    elif entity_type == "hospital":
+        if entity_id not in auth["hospitals"]:
+            return jsonify({"error": "Hospital not found"}), 404
+
+        # 🔥 DELETE ALL CLOUDINARY FILES
+        cloudinary.api.delete_resources_by_prefix(f"{entity_id}/")
+        cloudinary.api.delete_folder(entity_id)
+
+        # ❌ REMOVE DOCTORS
+        auth["doctors"] = {
+            k: v for k, v in auth["doctors"].items()
+            if v["hospital"] != entity_id
+        }
+
+        # ❌ REMOVE HOSPITAL
+        del auth["hospitals"][entity_id]
+
+
+    else:
+        return jsonify({"error": "Invalid type"}), 400
+
+    save_auth(auth)
+
+    global DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS
+    DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS = build_auth_maps()
+
+    return jsonify({"success": True})
 
 
 
@@ -689,7 +752,6 @@ def download_patient_zip(hospital, doctor, patient):
         as_attachment=True,
         download_name=f"{patient}_reports.zip"
     )
-
 
 
 
