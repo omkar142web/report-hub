@@ -10,6 +10,14 @@
     --success: #10b981;
     --error-bg: #f97316;
     --error-text: #2b1100;
+
+    /* for data base  */
+   --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+  --panel-strong: rgba(30,41,59,0.95);
+
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.35);
+  --shadow-strong: 0 25px 60px rgba(0,0,0,0.55);
 }
 
 * { 
@@ -1266,5 +1274,58 @@ input, button {
   display: flex;
   justify-content: space-between;
 }
+
+
+.main h1 {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+}
+
+
+#filterToggle {
+  width: 100%;
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+  color: #020617;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+#filterToggle:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-strong);
+}
+
+/* -------------------------------------------------------- */
+
+.modal-box .input {
+  background: rgba(15,23,42,0.8);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.modal-box .input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(56,189,248,0.25);
+}
+.modal-actions .btn:first-child {
+  background: rgba(239,68,68,0.15);
+  color: #fecaca;
+}
+
+.modal-actions .btn:last-child {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #022c22;
+}
+
+
+/* ------------------------------------------------------------------ */
+
 
 
