@@ -301,7 +301,9 @@ def index():
             # This case handles if the name consists only of invalid characters
             return jsonify({"error": "Invalid patient name provided."}), 400
 
-        current_index = get_next_index(patient_folder)
+        base_folder = f"unassign_hospital/patient_in_unassigned_hospital/{patient_folder}"
+        current_index = get_next_index(base_folder)
+
         uploaded_count = 0
         errors = []
 
@@ -312,7 +314,7 @@ def index():
                 
                 cloudinary.uploader.upload(
                     f,
-                    folder=f"unassign_hospital/patient_in_unassigned_hospital/{patient_folder}",
+                    folder=base_folder,
 
                     public_id=public_id,
                     resource_type="auto",
