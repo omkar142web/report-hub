@@ -28,7 +28,9 @@
       <button class="btn success" onclick="openAddModal()">
   ➕ Add
 </button>
-
+<br>
+<br>
+<br>
 <div id="addModal" class="modal hidden">
   <div class="modal-box">
     <h3>Add Hospital / Doctor</h3>
@@ -44,7 +46,7 @@
       <input id="hospitalCode" class="input"
              placeholder="Hospital code (apollo_mumbai)" required>
 
-      <button class="btn" onclick="addDoctorRow()">➕ Add Doctor (optional)</button>
+      <!-- <button class="btn" onclick="addDoctorRow()">➕ Add Doctor (optional)</button> -->
 
       <div id="doctorList"></div>
 
@@ -53,10 +55,14 @@
     </div>
 
     <!-- DOCTOR ONLY SECTION -->
+     <div></div>
+     <button class="btn" onclick="addDoctorRow()">➕ Add Doctor (optional)</button>
+<div><br></div>
     <div id="doctorSection" class="hidden">
       <input id="doctorCode" class="input"
              placeholder="Doctor code (dr_xyz)" required>
 
+      
       <select id="doctorHospital" class="input">
         {% for h in auth.hospitals %}
           <option value="{{ h }}">{{ h }}</option>
@@ -67,7 +73,7 @@
              placeholder="Doctor password" required>
     </div>
 
-    <div class="modal-actions">
+    <div class="modal-actions" style="display: flex; gap: 12px;">
       <button class="btn danger" onclick="closeAddModal()">Cancel</button>
       <button class="btn success" onclick="submitAdd()">Add</button>
     </div>
