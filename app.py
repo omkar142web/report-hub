@@ -332,7 +332,7 @@ def index():
 
     return render_template(
     "index.html",
-    upload_title="📤 Upload Private Reports Only ⚠️"
+    upload_title="📤 Upload Public Files Only ⚠️"
 )
 
 
