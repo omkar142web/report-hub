@@ -33,21 +33,47 @@
   <div class="modal-box">
     <h3>Add Hospital / Doctor</h3>
 
-    <select id="addType" class="input">
+    <!-- TYPE -->
+    <select id="addType" class="input" onchange="updateAddForm()">
       <option value="hospital">Hospital</option>
       <option value="doctor">Doctor</option>
     </select>
 
-    <input id="addId" class="input" placeholder="code (apollo_mumbai / dr_xyz)" />
-    <input id="addHospital" class="input" placeholder="hospital (for doctor)" />
-    <input id="addPassword" type="password" class="input" placeholder="password" />
+    <!-- HOSPITAL SECTION -->
+    <div id="hospitalSection">
+      <input id="hospitalCode" class="input"
+             placeholder="Hospital code (apollo_mumbai)" required>
+
+      <button class="btn" onclick="addDoctorRow()">➕ Add Doctor (optional)</button>
+
+      <div id="doctorList"></div>
+
+      <input id="hospitalPassword" type="password" class="input"
+             placeholder="Hospital password (required)">
+    </div>
+
+    <!-- DOCTOR ONLY SECTION -->
+    <div id="doctorSection" class="hidden">
+      <input id="doctorCode" class="input"
+             placeholder="Doctor code (dr_xyz)" required>
+
+      <select id="doctorHospital" class="input">
+        {% for h in auth.hospitals %}
+          <option value="{{ h }}">{{ h }}</option>
+        {% endfor %}
+      </select>
+
+      <input id="doctorPassword" type="password" class="input"
+             placeholder="Doctor password" required>
+    </div>
 
     <div class="modal-actions">
       <button class="btn danger" onclick="closeAddModal()">Cancel</button>
-      <button class="btn" onclick="submitAdd()">Add</button>
+      <button class="btn success" onclick="submitAdd()">Add</button>
     </div>
   </div>
 </div>
+
 
 
       <!-- DATA CONTAINER -->
@@ -265,35 +291,201 @@ function closeAddModal() {
 
 async function submitAdd() {
   const type = document.getElementById("addType").value;
-  const id = document.getElementById("addId").value.trim();
-  const hospital = document.getElementById("addHospital").value.trim();
-  const password = document.getElementById("addPassword").value.trim();
 
-  if (!id || !password) {
-    alert("ID and password required");
-    return;
+  if (type === "hospital") {
+    const hospital = hospitalCode.value.trim();
+    const hpw = hospitalPassword.value.trim();
+
+    if (!hospital) return alert("Hospital code required");
+
+    // Case: hospital + doctors
+    const doctors = document.querySelectorAll(".doctor-row");
+
+    if (doctors.length > 0) {
+      await fetch("/api/add-entity", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          type: "hospital",
+          id: hospital,
+          password: "temp"
+        })
+      });
+
+      for (const d of doctors) {
+        const code = d.querySelector(".doc-code").value.trim();
+        const pw = d.querySelector(".doc-password").value.trim();
+        if (!code || !pw) return alert("Doctor code & password required");
+
+        await fetch("/api/add-entity", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            type: "doctor",
+            id: code,
+            hospital,
+            password: pw
+          })
+        });
+      }
+    } else {
+      if (!hpw) return alert("Hospital password required");
+
+      await fetch("/api/add-entity", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          type: "hospital",
+          id: hospital,
+          password: hpw
+        })
+      });
+    }
   }
 
-  const res = await fetch("/api/add-entity", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type,
-      id,
-      hospital,
-      password
-    })
-  });
+  if (type === "doctor") {
+    const code = doctorCode.value.trim();
+    const pw = doctorPassword.value.trim();
+    const hospital = doctorHospital.value;
 
-  const data = await res.json();
-  if (data.success) {
-    alert("Added successfully");
-    location.reload();
-  } else {
-    alert(data.error || "Failed");
+    if (!code || !pw || !hospital)
+      return alert("All doctor fields required");
+
+    await fetch("/api/add-entity", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        type: "doctor",
+        id: code,
+        hospital,
+        password: pw
+      })
+    });
+  }
+
+  alert("Added successfully");
+  location.reload();
+}
+
+</script>
+
+
+<script>
+const hospitals = Object.keys(auth.hospitals);
+
+function onTypeChange() {
+  const type = document.getElementById("addType").value;
+
+  document.getElementById("doctorOnly").style.display =
+    type === "doctor" ? "block" : "none";
+
+  document.getElementById("askDoctors").style.display =
+    type === "hospital" ? "block" : "none";
+
+  document.getElementById("hospitalPassword").style.display =
+    type === "hospital" ? "block" : "none";
+
+  if (type === "doctor") {
+    const select = document.getElementById("doctorHospital");
+    select.innerHTML = `<option value="">Select hospital</option>`;
+    hospitals.forEach(h =>
+      select.innerHTML += `<option value="${h}">${h}</option>`
+    );
   }
 }
+
+function addDoctorRow() {
+  const container = document.getElementById("doctorList");
+
+  container.innerHTML += `
+    <div class="doctor-row">
+      <input class="input doc-code" placeholder="Doctor code (dr_xyz)" />
+      <input class="input doc-password" type="password" placeholder="Doctor password" />
+    </div>
+  `;
+}
 </script>
+
+<script>
+function updateAddForm() {
+  const type = document.getElementById("addType").value;
+  document.getElementById("hospitalSection").classList.toggle("hidden", type !== "hospital");
+  document.getElementById("doctorSection").classList.toggle("hidden", type !== "doctor");
+}
+
+function addDoctorRow() {
+  const div = document.createElement("div");
+  div.innerHTML = `
+    <input class="input doctor-code" placeholder="Doctor code (dr_xyz)" required>
+    <input class="input doctor-password" type="password"
+           placeholder="Doctor password" required>
+  `;
+  document.getElementById("doctorList").appendChild(div);
+}
+
+async function submitAdd() {
+  const type = document.getElementById("addType").value;
+
+  if (type === "hospital") {
+    const hospital = document.getElementById("hospitalCode").value.trim();
+    const password = document.getElementById("hospitalPassword").value.trim();
+
+    if (!hospital || !password) {
+      alert("Hospital code and password required");
+      return;
+    }
+
+    await fetch("/api/add-entity", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        type: "hospital",
+        id: hospital,
+        password
+      })
+    });
+
+    // optional doctors
+    document.querySelectorAll(".doctor-code").forEach((el, i) => {
+      fetch("/api/add-entity", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          type: "doctor",
+          id: el.value.trim(),
+          hospital,
+          password: document.querySelectorAll(".doctor-password")[i].value
+        })
+      });
+    });
+
+  } else {
+    const doctor = document.getElementById("doctorCode").value.trim();
+    const hospital = document.getElementById("doctorHospital").value;
+    const password = document.getElementById("doctorPassword").value.trim();
+
+    if (!doctor || !hospital || !password) {
+      alert("All fields required");
+      return;
+    }
+
+    await fetch("/api/add-entity", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        type: "doctor",
+        id: doctor,
+        hospital,
+        password
+      })
+    });
+  }
+
+  alert("Added successfully");
+  location.reload();
+}
+</script>
+
 
 
 </body>

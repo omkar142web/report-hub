@@ -1228,7 +1228,7 @@ mark {
 .hospital-section > .group-body,
 .doctor-section > .group-body {
   display: none;
-  margin-left: 18px;
+  /* margin-left: 18px; */
 }
 
 /* NEVER hide patient file containers */
@@ -1279,11 +1279,25 @@ input, button {
 
 .modal-box .input {
   width: 100%;
-  padding: 10px;
-  border-radius: 8px;
   border: none;
   margin-bottom: 16px;
+  background: var(--panel);
+  padding: 24px;
+  border-radius: 16px;
+  max-height: 85vh;              /* 🔥 key */
+  overflow-y: auto;              /* 🔥 key */
+  box-shadow: var(--shadow-strong);
 }
+
+/* smooth scrollbar */
+.modal-box::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-box::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 6px;
+}
+
 
 .modal-actions {
   display: flex;
@@ -1342,5 +1356,11 @@ input, button {
 
 /* ------------------------------------------------------------------ */
 
-
+/* improving doctor row styling, adding doctor / hospital section */ 
+.doctor-row {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+}
 
