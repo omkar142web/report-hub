@@ -1364,3 +1364,18 @@ input, button {
   border-radius: 10px;
 }
 
+
+body {
+    background: #0f172a;
+}
+
+.main::after {
+    content: "";
+    display: block;
+    height: 100px;
+    background: linear-gradient(
+        to bottom,
+        rgba(30, 41, 59, 0),
+        #0f172a
+    );
+}
