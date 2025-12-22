@@ -480,7 +480,9 @@ def upload_doctor(doctor_code):
         })
 
     # 3️⃣ GET → reuse existing upload UI
-    display_name = f"Dr {doctor_code.replace('dr_', '').title()}"
+    # display_name = f"Dr {doctor_code.replace('dr_', '').title()}"
+    display_name = doctor_code.replace("_", " ").title()
+
 
     return render_template(
         "index.html",
@@ -805,6 +807,7 @@ def api_change_password():
     DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS = build_auth_maps()
 
     return jsonify({"success": True})
+
 
 
 
