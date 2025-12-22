@@ -762,11 +762,7 @@ def download_patient_zip(hospital, doctor, patient):
     )
 
 
-# ✅ TEMP DEV LOGIN (REMOVE BEFORE PRODUCTION)
-@app.route("/dev-login")
-def dev_login():
-    session["doctor"] = True
-    return redirect(url_for("reports"))
+
 
 if __name__ == "__main__":
     # The development server is not for production. A WSGI server like Gunicorn will run the app.
