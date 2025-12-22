@@ -110,7 +110,9 @@ a {
 /* Central Box for Login/Upload */
 .center-box {
     width: 400px;
-    margin: 100px auto;
+    /* margin: 100px auto; */
+    /* for main web upload page */
+    margin: 50px auto;
     background: rgba(30, 41, 59, 0.7);
     backdrop-filter: blur(8px);
     padding: 35px;
@@ -119,6 +121,19 @@ a {
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
+/* =========================================
+   Upload page vertical centering (FIX)
+   ========================================= */
+    /* for main web upload page */
+
+body.upload-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+
 
 .center-box h2 {
     font-size: 1.8rem;
