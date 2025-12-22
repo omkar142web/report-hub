@@ -312,7 +312,8 @@ def index():
                 
                 cloudinary.uploader.upload(
                     f,
-                    folder=patient_folder,
+                    folder=f"unassign_hospital/patient_in_unassigned_hospital/{patient_folder}",
+
                     public_id=public_id,
                     resource_type="auto",
                     access_mode="public"   # Ensure PDFs are publicly accessible
