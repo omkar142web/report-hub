@@ -1206,7 +1206,7 @@ mark {
   padding: 12px 16px;
   margin: 10px 0;
   border-radius: 12px;
-  background: linear-gradient(145deg, #1e293b, #0f172a);
+  background:  #1e293b;
   color: #e5e7eb;
   font-weight: 600;
   cursor: pointer;
@@ -1366,16 +1366,9 @@ input, button {
 
 
 body {
-    background: #0f172a;
+    background: #0f172a; /* base dark */
 }
 
-.main::after {
-    content: "";
-    display: block;
-    height: 100px;
-    background: linear-gradient(
-        to bottom,
-        rgba(30, 41, 59, 0),
-        #0f172a
-    );
+.main {
+    background: #0f172a;
 }
