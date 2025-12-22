@@ -766,6 +766,7 @@ def download_patient_zip(hospital, doctor, patient):
 
 
 
+
 if __name__ == "__main__":
     # The development server is not for production. A WSGI server like Gunicorn will run the app.
     app.run(debug=True, host='0.0.0.0')

@@ -1066,16 +1066,16 @@ body {
 /* =========================================================
    LAST TWO patients → open UPWARD (final overflow fix)
    ========================================================= */
-.patient-section:nth-last-child(-n + 2) .patient-info-card {
+/* .patient-section:nth-last-child(-n + 2) .patient-info-card {
     top: auto;
-    bottom: calc(100% + 12px); /* slightly more breathing room */
+    bottom: calc(100% + 12px); /* slightly more breathing room 
     transform: translate(-10px, -8px);
 }
 
 .patient-section:nth-last-child(-n + 2)
 .patient-info-wrapper.open .patient-info-card {
     transform: translate(-10px, 0);
-}
+} */
 
 
 
