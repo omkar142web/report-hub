@@ -764,6 +764,48 @@ def download_patient_zip(hospital, doctor, patient):
     )
 
 
+@app.route("/api/change-password", methods=["POST"])
+@login_required
+def api_change_password():
+    if not session.get("doctor"):
+        return jsonify({"error": "Admin only"}), 403
+
+    data = request.get_json()
+    entity_type = data.get("type")   # "doctor" or "hospital"
+    entity_id = data.get("id")
+    new_password = data.get("new_password")
+
+    if not all([entity_type, entity_id, new_password]):
+        return jsonify({"error": "Missing fields"}), 400
+
+    auth = load_auth()
+    now = int(time.time())
+
+    if entity_type == "doctor":
+        if entity_id not in auth["doctors"]:
+            return jsonify({"error": "Doctor not found"}), 404
+
+        auth["doctors"][entity_id]["password_hash"] = generate_password_hash(new_password)
+        auth["doctors"][entity_id]["password_updated_at"] = now
+
+    elif entity_type == "hospital":
+        if entity_id not in auth["hospitals"]:
+            return jsonify({"error": "Hospital not found"}), 404
+
+        auth["hospitals"][entity_id]["password_hash"] = generate_password_hash(new_password)
+        auth["hospitals"][entity_id]["password_updated_at"] = now
+
+    else:
+        return jsonify({"error": "Invalid type"}), 400
+
+    save_auth(auth)
+
+    # 🔁 refresh in-memory maps
+    global DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS
+    DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS = build_auth_maps()
+
+    return jsonify({"success": True})
+
 
 
 
