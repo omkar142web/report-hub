@@ -92,34 +92,39 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function addFiles(files) {
-    const allowedExtensions = [
-      "pdf",
-      "png",
-      "jpg",
-      "jpeg",
-      "gif",
-      "mp4",
-      "mov",
-      "webm",
-    ];
-    let validFiles = [];
-    let invalidFiles = [];
+  const allowedExtensions = [
+    "pdf",
+    "png", "jpg", "jpeg", "gif",
+    "mp4", "mov", "webm",
+    "txt", "csv", "log"
+  ];
 
-    files.forEach((file) => {
-      const extension = file.name.split(".").pop().toLowerCase();
-      if (allowedExtensions.includes(extension)) {
-        validFiles.push(file);
-      } else {
-        invalidFiles.push(file.name);
-      }
-    });
+  let validFiles = [];
+  let invalidFiles = [];
 
-    selectedFiles = [...selectedFiles, ...validFiles];
-    if (invalidFiles.length > 0) {
-      showToast(`Invalid file type(s): ${invalidFiles.join(", ")}`, "error");
+  files.forEach((file) => {
+    const name = file.name.toLowerCase();
+
+    // ✅ SAFER extension detection
+    const match = name.match(/\.([a-z0-9]+)$/i);
+    const extension = match ? match[1] : "";
+
+    if (allowedExtensions.includes(extension)) {
+      validFiles.push(file);
+    } else {
+      invalidFiles.push(file.name);
     }
-    updateFileList();
+  });
+
+  selectedFiles = [...selectedFiles, ...validFiles];
+
+  if (invalidFiles.length > 0) {
+    showToast(`Invalid file type(s): ${invalidFiles.join(", ")}`, "error");
   }
+
+  updateFileList();
+}
+
 
   function updateFileList() {
     fileListContainer.innerHTML = ""; // Clear previous list

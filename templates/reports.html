@@ -122,25 +122,39 @@
   <div class="file-date">Uploaded on: {{ file_obj.date }}</div>
 
   {% if file_obj.is_pdf %}
-    <span class="badge pdf">PDF</span>
-    <a href="{{ file_obj.url }}" target="_blank">
-      <img src="{{ file_obj.thumbnail_url }}">
-    </a>
+  <span class="badge pdf">PDF</span>
+  <a href="{{ file_obj.url }}" target="_blank">
+    <img src="{{ file_obj.thumbnail_url }}">
+  </a>
 
-  {% elif file_obj.is_video %}
-    <span class="badge video">VIDEO</span>
-    <video src="{{ file_obj.url }}" controls></video>
+{% elif file_obj.is_video %}
+  <span class="badge video">VIDEO</span>
+  <video src="{{ file_obj.url }}" controls></video>
 
-  {% else %}
-    <span class="badge img">IMG</span>
-    <img src="{{ file_obj.url }}">
-  {% endif %}
+{% elif file_obj.is_text %}
+  <span class="badge txt">TEXT</span>
+  <div class="pdf-preview">
+    <p>📄 Text File</p>
+    <a href="{{ url_for('download_raw', public_id=file_obj.public_id) }}">Open</a>
+  </div>
+
+{% else %}
+  <span class="badge img">IMG</span>
+  <img src="{{ file_obj.url }}">
+{% endif %}
+
 
   <!-- ✅ ADD ACTIONS EXACTLY HERE -->
   <div class="actions">
-    <a href="{{ file_obj.url }}" target="_blank">Open</a>
 
-    <form action="{{ url_for('delete_file') }}" method="post">
+  {% if file_obj.is_text %}
+    <a href="{{ url_for('download_raw', public_id=file_obj.public_id) }}">Open</a>
+  {% else %}
+    <a href="{{ file_obj.url }}" target="_blank">Open</a>
+  {% endif %}
+
+  <form action="{{ url_for('delete_file') }}" method="post">
+
       <input type="hidden" name="public_id" value="{{ file_obj.public_id }}">
       <input type="hidden" name="resource_type" value="{{ file_obj.resource_type }}">
       <button type="submit" class="delete">Delete</button>

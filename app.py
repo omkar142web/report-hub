@@ -68,7 +68,13 @@ cloudinary.config(
     secure=True
 )
 PASSWORD_HASH = os.environ.get("DOCTOR_PASSWORD_HASH")
-ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'webm'}
+ALLOWED_EXTENSIONS = {
+    'pdf',
+    'png', 'jpg', 'jpeg', 'gif',
+    'mp4', 'mov', 'webm',
+    'txt', 'csv', 'log'
+}
+
 
 
 def validate_password_version():
@@ -157,10 +163,20 @@ def build_reports_data(prefix=None):
         max_results=500
     )
 
+    resources_raw = cloudinary.api.resources(
+        type="upload",
+        resource_type="raw",
+        prefix=prefix,
+        max_results=500
+    )
+
+
     all_resources = (
         resources_img.get("resources", []) +
-        resources_vid.get("resources", [])
+        resources_vid.get("resources", []) +
+        resources_raw.get("resources", [])
     )
+
 
     for res in all_resources:
         public_id = res["public_id"]
@@ -179,28 +195,55 @@ def build_reports_data(prefix=None):
             "pdf_count": 0,
             "image_count": 0,
             "video_count": 0,
+            "text_count": 0,
         })
+
+
 
         upload_date = datetime.strptime(
             res["created_at"], "%Y-%m-%dT%H:%M:%SZ"
         ).strftime("%b %d, %Y")
 
+        # ---------- SAFE filename handling (FIX for raw files) ----------
+        filename = parts[-1]   # base filename from public_id
+
+        # ✅ FIX: force extension for RAW files
+        if res["resource_type"] == "raw":
+            if not re.search(r"\.(txt|csv|log)$", filename, re.I):
+                filename = f"{filename}.txt"
+
+        elif "format" in res:
+            if not filename.endswith(f".{res['format']}"):
+                filename = f"{filename}.{res['format']}"
+
+
         file_obj = {
-            "name": f"{parts[-1]}.{res['format']}",
+            "name": filename,
             "date": upload_date,
             "url": res["secure_url"],
             "public_id": public_id,
-            "is_pdf": res["format"] == "pdf",
+            "is_pdf": res.get("format") == "pdf",
             "is_video": res["resource_type"] == "video",
+            "is_text": res["resource_type"] == "raw",
             "resource_type": res["resource_type"],
         }
+        # ---------------------------------------------------------------
+
+
 
         if file_obj["is_pdf"]:
             data[hospital][doctor][patient]["pdf_count"] += 1
+
         elif file_obj["is_video"]:
             data[hospital][doctor][patient]["video_count"] += 1
+
+        elif file_obj["is_text"]:
+            data[hospital][doctor][patient]["text_count"] += 1
+
         else:
             data[hospital][doctor][patient]["image_count"] += 1
+
+
 
         if file_obj["is_pdf"]:
             file_obj["thumbnail_url"] = cloudinary.utils.cloudinary_url(
@@ -758,7 +801,10 @@ def download_patient_zip(hospital, doctor, patient):
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
         for file in all_files:
             file_url = file["secure_url"]
-            filename = f"{file['public_id'].split('/')[-1]}.{file['format']}"
+            filename = file["public_id"].split("/")[-1]
+
+            if "format" in file and not filename.endswith(f".{file['format']}"):
+                filename = f"{filename}.{file['format']}"
 
             try:
                 response = requests.get(file_url, timeout=20)
@@ -818,6 +864,37 @@ def api_change_password():
     DOCTOR_MAP, DOCTOR_PASSWORDS, HOSPITAL_PASSWORDS = build_auth_maps()
 
     return jsonify({"success": True})
+
+
+
+
+
+@app.route("/download-raw/<path:public_id>")
+@login_required
+def download_raw(public_id):
+    # Fetch file info
+    res = cloudinary.api.resource(public_id, resource_type="raw")
+
+    file_url = res["secure_url"]
+    filename = public_id.split("/")[-1]
+
+    # force extension
+    if not re.search(r"\.(txt|csv|log)$", filename, re.I):
+        filename += ".txt"
+
+    response = requests.get(file_url, timeout=20)
+    response.raise_for_status()
+
+    return send_file(
+        io.BytesIO(response.content),
+        as_attachment=True,
+        download_name=filename,
+        mimetype="text/plain"
+    )
+
+
+
+
 
 
 
