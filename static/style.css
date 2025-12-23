@@ -1111,7 +1111,8 @@ body {
 }
 
 
-.patient-toggle:hover .patient-name {
+.patient-toggle:hover .patient-name,
+.patient-toggle.active .patient-name {
     color: var(--accent);
 }
 
@@ -1218,8 +1219,6 @@ mark {
 }
 
 .hospital-toggle {
-  border-left: 4px solid #38bdf8;    /* added by me */
-  border-right: 4px solid #38bdf8;  /* added by me */
 
   font-size: 16px;
 
@@ -1228,8 +1227,6 @@ mark {
 
 
 .doctor-toggle {
-  border-left: 4px solid #a78bfa;
-  border-right: 4px solid #a78bfa;  /* added by me */
 
   /* margin-left: 12px; */
   padding-left: 12px;   
@@ -1415,7 +1412,12 @@ body {
   color: #7F22FE;
 
       background: rgba(255,255,255,0.08);
-    border-color: rgba(56,189,248,0.4);
+    /* border-color: rgba(56,189,248,0.4); */
+    border-color: #a78bfa;
+
+        /* cuz overriding side col */
+    border-left: 4px solid #a78bfa;
+    border-right: 4px solid #a78bfa;  /* added by me */
 
 }
 /* .doctor-toggle {
@@ -1432,6 +1434,10 @@ body {
       background: rgba(255,255,255,0.08);
     border-color: rgba(56,189,248,0.4);
 
+        /* cuz overriding side col */
+  border-left: 4px solid #38bdf8;    /* added by me */
+  border-right: 4px solid #38bdf8;  /* added by me */
+
 }
 
 /* .hospital-toggle {
@@ -1439,7 +1445,7 @@ body {
 } */
 
 
-
+/* -------------------------------------------------------------------- */
 /* added by me, border magic */
 .hospital-toggle {
     border: 1px solid transparent;
@@ -1447,6 +1453,10 @@ body {
     color 0.55s ease,
     /* later added 🔻for magic */
         border-color 0.92s ease;
+
+    /* cuz overriding side col */
+  border-left: 4px solid #38bdf8;    /* added by me */
+  border-right: 4px solid #38bdf8;  /* added by me */
 
 }
 .doctor-toggle {
@@ -1456,7 +1466,13 @@ body {
     /* later added 🔻for magic */
         border-color 0.92s ease;
 
+   border-left: 4px solid #a78bfa;
+   border-right: 4px solid #a78bfa;  /* added by me */
+
 }
+/* -------------------------------------------------------------------- */
+
+
 
 /* .hospital-toggle:hover,
 .hospital-toggle:active {
