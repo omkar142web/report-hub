@@ -1169,7 +1169,11 @@ body {
 /* Patient row layout */
 .patient-toggle {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    /* grid-template-columns: minmax(0, 1fr) auto; */
+
+    grid-template-columns: minmax(0, 1fr) auto 1px;
+/* That 1px is reserved arrow space */
+
     align-items: center;
     gap: 12px;
 
@@ -1734,7 +1738,30 @@ body {
 /* Rotate when open */
 .hospital-toggle.active::after,
 .doctor-toggle.active::after {
-  transform: rotate(90deg);
+  transform: rotate(450deg);
+}
+
+
+
+
+/* Patient arrow */
+.patient-toggle::after {
+  content: "❯";
+  font-size: 14px;
+  color: var(--text-dim);
+
+  justify-self: center;   /* 👈 center inside 32px column */
+  transition: transform 0.35s ease, color 0.35s ease;
+  opacity: 0.7;
+}
+
+.patient-toggle:hover::after {
+  opacity: 1;
+}
+
+.patient-toggle.active::after {
+  transform: rotate(450deg);
+  color: var(--danger);
 }
 
 
@@ -1820,9 +1847,3 @@ body {
 
 
 /* ========================================================= */
-
-
-
-
-
-
