@@ -349,15 +349,21 @@ def login():
 
         # 1️⃣ Targeted login
         if target:
+            
             if target.startswith("doctor:"):
                 doctor_code = target.split(":")[1]
                 if doctor_code in DOCTOR_PASSWORDS and check_password_hash(
                     DOCTOR_PASSWORDS[doctor_code], password
                 ):
+                    auth = load_auth()
                     session.clear()
                     session["doctor_auth"] = doctor_code
                     session["login_role"] = "doctor"
+                    session["password_version"] = auth["doctors"][doctor_code]["password_updated_at"]
                     return redirect(url_for("reports_doctor", doctor_code=doctor_code))
+
+
+
                 error = "Invalid doctor password"
 
             elif target.startswith("hospital:"):
@@ -369,26 +375,31 @@ def login():
                     session["hospital_auth"] = hospital_code
                     session["login_role"] = "hospital"
                     return redirect(url_for("reports_hospital", hospital_code=hospital_code))
+
                 error = "Invalid hospital password"
 
         # 2️⃣ Fallback (direct login page access)
         else:
             for doctor_code, hash_val in DOCTOR_PASSWORDS.items():
                 if check_password_hash(hash_val, password):
+                    auth = load_auth()
                     session.clear()
                     session["doctor_auth"] = doctor_code
                     session["login_role"] = "doctor"
+                    session["password_version"] = auth["doctors"][doctor_code]["password_updated_at"]
                     return redirect(url_for("reports_doctor", doctor_code=doctor_code))
-                session["password_version"] = load_auth()["doctors"][doctor_code]["password_updated_at"]
+
 
 
             for hospital_code, hash_val in HOSPITAL_PASSWORDS.items():
                 if check_password_hash(hash_val, password):
+                    auth = load_auth()
                     session.clear()
                     session["hospital_auth"] = hospital_code
                     session["login_role"] = "hospital"
+                    session["password_version"] = auth["hospitals"][hospital_code]["password_updated_at"]
                     return redirect(url_for("reports_hospital", hospital_code=hospital_code))
-                session["password_version"] = load_auth()["hospitals"][hospital_code]["password_updated_at"]
+
 
 
             if PASSWORD_HASH and check_password_hash(PASSWORD_HASH, password):
