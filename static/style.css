@@ -686,12 +686,16 @@ input:focus {
 .back-link, .doctor-login-link {
     display: block;
     margin-top: 20px;
+    margin: 20px auto 0;
     font-size: 0.9rem;
     color: var(--text-dim);
     background-color: var(--panel);
     padding: 10px;
     border-radius: 5px;
     border: 1px solid var(--accent);
+
+    transition:
+    background-color 0.55s ease;
 }
 
 .back-link:hover, .doctor-login-link:hover {
