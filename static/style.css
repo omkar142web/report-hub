@@ -423,6 +423,9 @@ input:focus {
 .badge.img { background: var(--accent); color: #000; }
 .badge.video { background: #9333ea; color: #fff; }
 
+/* added by me */
+.badge.txt { background: #2D2D2D; color: #fff; }
+
 /* Actions */
 .actions {
     display: flex;
@@ -1410,10 +1413,14 @@ body {
 .doctor-toggle:hover,
 .doctor-toggle.active {
   color: #7F22FE;
+
+      background: rgba(255,255,255,0.08);
+    border-color: rgba(56,189,248,0.4);
+
 }
-.doctor-toggle {
+/* .doctor-toggle {
   transition: color 0.25s ease;
-}
+} */
 
 
 
@@ -1421,9 +1428,61 @@ body {
 .hospital-toggle:hover,
 .hospital-toggle.active {
   color: #F61509;
+
+      background: rgba(255,255,255,0.08);
+    border-color: rgba(56,189,248,0.4);
+
 }
+
+/* .hospital-toggle {
+  transition: color 0.55s ease;
+} */
+
+
+
+/* added by me, border magic */
 .hospital-toggle {
-  transition: color 0.25s ease;
+    border: 1px solid transparent;
+    transition:
+    color 0.55s ease,
+    /* later added 🔻for magic */
+        border-color 0.92s ease;
+
+}
+.doctor-toggle {
+    border: 1px solid transparent;
+    transition:
+    color 0.55s ease,
+    /* later added 🔻for magic */
+        border-color 0.92s ease;
+
+}
+
+/* .hospital-toggle:hover,
+.hospital-toggle:active {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(56,189,248,0.4);
+}
+
+.doctor-toggle:hover,
+.doctor-toggle:active {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(56,189,248,0.4);
+} */
+
+
+
+/*added by me */
+/* 👉 Disable hover color on touch devices */
+/* Desktop hover only */
+@media (hover: hover) {
+  .hospital-toggle:hover {
+    color: #F61509;
+  }
+}
+/* Real open state (JS-controlled) */
+.hospital-toggle.active {
+  color: #F61509;
 }
 
 
