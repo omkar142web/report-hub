@@ -683,7 +683,8 @@ input:focus {
     border-width: 0;
 }
 
-.back-link, .doctor-login-link {
+/* ------------------------------------------------------ */
+/* .back-link, .doctor-login-link {
     display: block;
     margin-top: 20px;
     margin: 20px auto 0;
@@ -699,7 +700,7 @@ input:focus {
 
 
 
-    /* 🌊 Soft bloom gradient */
+    /* 🌊 Soft bloom gradient 
     background-image: linear-gradient(
         90deg,
         rgba(56,189,248,0.00) 0%,
@@ -711,18 +712,18 @@ input:focus {
         rgba(56,189,248,0.00) 100%
     );
 
-    background-size: 180% 100%;     /* wider = smoother */
+    background-size: 180% 100%;     /* wider = smoother 
     background-position: -140% 0;
     background-repeat: no-repeat;
 
-    /* Base transitions (non-animated parts) */
+    /* Base transitions (non-animated parts) 
     transition:
         color 0.2s ease,
         box-shadow 0.8s ease,
         filter 0.8s ease;
 }
 
-/* 🔥 Hover: run shimmer ONCE for 5 seconds */
+/* 🔥 Hover: run shimmer ONCE for 5 seconds 
 .back-link:hover,
 .doctor-login-link:hover {
     animation: shimmer-once 2.5s ease-in-out forwards;
@@ -732,7 +733,7 @@ input:focus {
     filter: brightness(1.04);
 }
 
-/* 💥 Optional: click feedback (feels premium) */
+/* 💥 Optional: click feedback (feels premium) 
 .back-link:active,
 .doctor-login-link:active {
     box-shadow:
@@ -741,7 +742,7 @@ input:focus {
     filter: brightness(1.12);
 }
 
-/* ✨ Shimmer animation */
+/* ✨ Shimmer animation 
 @keyframes shimmer-once {
     from {
         background-position: -50% 0;
@@ -749,7 +750,148 @@ input:focus {
     to {
         background-position: 140% 0;
     }
+} 
+
+------------------------------------------------------------------ */
+
+/* .back-link,
+.doctor-login-link {
+    position: relative;
+    overflow: hidden;
+
+    display: block;
+    margin: 20px auto 0;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    background-color: var(--panel);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--accent);
+
+    transition:
+        color 0.25s ease,
+        box-shadow 0.6s ease,
+        filter 0.6s ease;
 }
+
+/* 🌊 Infinite shimmer layer 
+.back-link::before,
+.doctor-login-link::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        90deg,
+    transparent 0%,
+    rgba(56,189,248,0.04) 10%,
+    rgba(56,189,248,0.08) 25%,
+    rgba(56,189,248,0.18) 40%,
+    rgba(56,189,248,0.30) 50%,
+    rgba(56,189,248,0.18) 60%,
+    rgba(56,189,248,0.08) 75%,
+    rgba(56,189,248,0.04) 90%,
+    transparent 100%
+    );
+
+    transform: translateX(-100%);
+    animation: shimmer-layer 6s linear infinite;
+
+    pointer-events: none;
+}
+
+/* Hover = intensity only 
+.back-link:hover,
+.doctor-login-link:hover {
+    color: var(--text-main);
+    box-shadow: 0 0 18px rgba(56,189,248,0.22);
+    filter: brightness(1.05);
+}
+
+/* 🚀 True seamless animation 
+@keyframes shimmer-layer {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(100%);
+    }
+} */
+
+/* ------------------------------------------------------------------------------------------- */
+
+.back-link,
+.doctor-login-link {
+    position: relative;
+    overflow: hidden;
+
+    display: block;
+    margin: 20px auto 0;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    background-color: var(--panel);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--accent);
+
+    transition:
+        color 0.25s ease,
+        box-shadow 0.6s ease,
+        filter 0.6s ease;
+}
+
+/* 🌊 Infinite shimmer layer */
+.back-link::before,
+.back-link::after,
+.doctor-login-link::before,
+.doctor-login-link::after {
+    content: "";
+    position: absolute;
+    inset: -40%;
+
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(56,189,248,0.04) 12%,
+        rgba(56,189,248,0.10) 28%,
+        rgba(56,189,248,0.26) 50%,
+        rgba(56,189,248,0.10) 72%,
+        rgba(56,189,248,0.04) 88%,
+        transparent 100%
+    );
+
+    transform: translateX(-120%);
+    animation: shimmer-flow 6s linear infinite;
+
+    pointer-events: none;
+    z-index: 0;
+}
+
+
+.back-link::after,
+.doctor-login-link::after {
+    animation-delay: -3s; /* 🔥 start halfway through */
+    opacity: 0.85;
+}
+
+
+/* 🚀 True seamless animation */
+@keyframes shimmer-flow {
+    from {
+        transform: translateX(-120%);
+    }
+    to {
+        transform: translateX(120%);
+    }
+}
+.back-link:hover,
+.doctor-login-link:hover {
+    color: var(--text-main);
+    box-shadow: 0 0 18px rgba(56,189,248,0.22);
+    filter: brightness(1.05);
+}
+
+
 
 
 
