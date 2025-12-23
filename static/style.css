@@ -877,13 +877,25 @@ input:focus {
 
 /* 🚀 True seamless animation */
 @keyframes shimmer-flow {
-    from {
-        transform: translateX(-120%);
+    0% {
+        transform: translateX(-120%) translateY(0) scale(1);
+        opacity: 0.65;
     }
-    to {
-        transform: translateX(120%);
+    30% {
+        transform: translateX(-40%) translateY(-1px) scale(1.02);
+        opacity: 0.85;
+    }
+    60% {
+        transform: translateX(40%) translateY(1px) scale(1.03);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(120%) translateY(0) scale(1);
+        opacity: 0.7;
     }
 }
+
+
 .back-link:hover,
 .doctor-login-link:hover {
     color: var(--text-main);
