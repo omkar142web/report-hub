@@ -977,6 +977,8 @@ body {
 
 
     overflow: visible; /* allow popup to escape */
+
+    border-right: 4px solid var(--text-dim);  /* added by me */
 }
 
 /* Patient name (ellipsis works 100%) */
@@ -1213,15 +1215,25 @@ mark {
 }
 
 .hospital-toggle {
-  border-left: 4px solid #38bdf8;
+  border-left: 4px solid #38bdf8;    /* added by me */
+  border-right: 4px solid #38bdf8;  /* added by me */
+
   font-size: 16px;
+
+  color: #FF8A8C;   /* added by me */
 }
 
 
 .doctor-toggle {
   border-left: 4px solid #a78bfa;
-  margin-left: 12px;
+  border-right: 4px solid #a78bfa;  /* added by me */
+
+  /* margin-left: 12px; */
+  padding-left: 12px;   
+
   font-size: 15px;
+
+  color: #B38AFF;   /* added by me */
 }
 
 /* Only hide hospital & doctor groups by default */
@@ -1277,17 +1289,18 @@ input, button {
   margin-bottom: 12px;
 }
 
-.modal-box .input {
-  width: 100%;
-  border: none;
-  margin-bottom: 16px;
+.modal-box {
   background: var(--panel);
   padding: 24px;
-  border-radius: 16px;
-  max-height: 85vh;              /* 🔥 key */
-  overflow-y: auto;              /* 🔥 key */
+  border-radius: 14px;
+  width: 320px;
+
+  max-height: 85vh;      /* ✅ LIMIT HEIGHT */
+  overflow-y: auto;      /* ✅ ENABLE SCROLL */
+
   box-shadow: var(--shadow-strong);
 }
+
 
 /* smooth scrollbar */
 .modal-box::-webkit-scrollbar {
@@ -1332,12 +1345,19 @@ input, button {
 
 /* -------------------------------------------------------- */
 
+
 .modal-box .input {
+  width: 100%;
+  border: none;
+  margin-bottom: 16px;
   background: rgba(15,23,42,0.8);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: #fff;
+  padding: 14px;
+  border-radius: 12px;
+
+    color: #fff;
   font-size: 0.95rem;
 }
+
 
 .modal-box .input:focus {
   border-color: var(--accent);
@@ -1372,3 +1392,152 @@ body {
 .main {
     background: #0f172a;
 }
+
+
+
+
+
+/* added by me: */
+.doctor-body .patient-section:first-child {
+  margin-top: 12px;   /* try 10–16px */
+}
+
+
+
+
+/* Doctor */
+.doctor-toggle:hover,
+.doctor-toggle.active {
+  color: #7F22FE;
+}
+.doctor-toggle {
+  transition: color 0.25s ease;
+}
+
+
+
+/* Hospital */
+.hospital-toggle:hover,
+.hospital-toggle.active {
+  color: #F61509;
+}
+.hospital-toggle {
+  transition: color 0.25s ease;
+}
+
+
+
+/* Hospital & Doctor Together */
+/* Base arrow */
+/* Make buttons flex so arrow can push right */
+.group-toggle {
+  display: flex;
+  align-items: center;
+}
+
+/* Base arrow */
+.hospital-toggle::after,
+.doctor-toggle::after {
+  /* content: "➤"; */
+  content: "❯";
+  margin-left: auto;
+  font-size: 14px;
+  display: inline-block;
+  transition: transform 0.35s ease;
+}
+
+/* Rotate when open */
+.hospital-toggle.active::after,
+.doctor-toggle.active::after {
+  transform: rotate(90deg);
+}
+
+
+
+
+
+
+
+/* =========================================================
+   ADMIN / AUTH MANAGEMENT CARDS
+   ========================================================= */
+
+.admin-card {
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-card:hover {
+  border-color: rgba(56,189,248,0.4);
+}
+
+
+.admin-hospital-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.admin-hospital-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #bae6fd; /* calm admin cyan */
+}
+
+.admin-doctor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-left: 18px;
+  margin-top: 10px;
+  padding: 10px 12px;
+
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+}
+
+.admin-doctor-name {
+  font-size: 0.95rem;
+  color: #e5e7eb;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 8px;
+}
+
+
+
+.admin-card .btn {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+
+.main h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#filterToggle {
+  background: linear-gradient(135deg, #22d3ee, #38bdf8);
+  color: #020617;
+}
+
+
+/* ========================================================= */
+
+
+
+
+
+

@@ -178,8 +178,29 @@
       function toggleGroup(id) {
         const el = document.getElementById(id);
         if (!el) return;
-        el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none";
+
+        const btn = event.currentTarget;
+        const isHospital = btn.classList.contains("hospital-toggle");
+        const isOpen = el.style.display === "block";
+
+        // 🔒 Close other hospitals (ONLY hospitals)
+        if (isHospital && !isOpen) {
+          document.querySelectorAll(".hospital-toggle.active").forEach((otherBtn) => {
+            if (otherBtn !== btn) {
+              const otherId = otherBtn.getAttribute("onclick").match(/'(.*?)'/)[1];
+              const otherBody = document.getElementById(otherId);
+              if (otherBody) otherBody.style.display = "none";
+              otherBtn.classList.remove("active");
+            }
+          });
+        }
+
+        // Toggle current
+        el.style.display = isOpen ? "none" : "block";
+        btn.classList.toggle("active", !isOpen);
       }
+
+
 
       function togglePatient(id) {
         const files = document.getElementById("patient-" + id);

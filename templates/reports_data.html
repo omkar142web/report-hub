@@ -11,7 +11,7 @@
 
     <!-- SIDEBAR -->
     <div class="sidebar">
-      <a href="{{ url_for('reports') }}" class="clinic-logo">Clinic</a>
+      <a href="{{ url_for('reports') }}" class="clinic-logo">ADMIN 🔑</a>
       <a href="{{ url_for('logout') }}" class="logout">Logout</a>
     </div>
 
@@ -160,38 +160,44 @@ for (const doctor in auth.doctors) {
     container.innerHTML = "";
     for (const hospital in hospitalMap) {
       const block = document.createElement("div");
-      block.className = "patient-toggle";
+      block.className = "admin-card";
+
 
       let html = `
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <strong>🏥 ${hospital.replaceAll("_"," ")}</strong>
+  <div class="admin-hospital-row">
+    <div class="admin-hospital-name">
+      🏥 ${hospital.replaceAll("_"," ")}
+    </div>
 
     <button class="btn danger"
       onclick="deleteEntity('hospital','${hospital}')">
-      Delete Hospital
+      Delete
     </button>
   </div>
-  <br>
 `;
 
 
+
       hospitalMap[hospital].forEach(doc => {
-        html += `
-          <div style="margin-left:16px;margin-top:6px;">
-            👨‍⚕️ ${doc}
+          html += `
+            <div class="admin-doctor-row">
+              <span class="admin-doctor-name">👨‍⚕️ ${doc}</span>
 
-            <button class="btn"
-            onclick="openModal('doctor','${doc}')">
-            Change Password
-            </button>
+              <div class="admin-actions">
+                <button class="btn"
+                  onclick="openModal('doctor','${doc}')">
+                  Change Password
+                </button>
 
-            <button class="btn danger"
-            onclick="deleteEntity('doctor','${doc}')">
-            Delete
-            </button>
-
-          </div>`;
+                <button class="btn danger"
+                  onclick="deleteEntity('doctor','${doc}')">
+                  Delete
+                </button>
+              </div>
+            </div>
+          `;
       });
+
 
       block.innerHTML = html;
       container.appendChild(block);
@@ -202,7 +208,8 @@ for (const doctor in auth.doctors) {
     container.innerHTML = "";
     for (const hospital in hospitalMap) {
       const block = document.createElement("div");
-      block.className = "patient-toggle";
+      block.className = "admin-card";
+
 
       block.innerHTML = `
   <strong>🏥 ${hospital.replaceAll("_"," ")}</strong>
