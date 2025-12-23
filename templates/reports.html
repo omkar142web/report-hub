@@ -186,6 +186,26 @@
     {% endwith %}
 
     <script>
+
+
+
+function resetDoctorState(doctorBody) {
+  if (!doctorBody) return;
+
+  // Close all patient file sections
+  doctorBody.querySelectorAll(".patient-files").forEach((files) => {
+    files.style.display = "none";
+  });
+
+  // Remove active state from patient toggles
+  doctorBody.querySelectorAll(".patient-toggle.active").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+}
+
+
+
+
       // =========================
       // 1. GLOBAL TOGGLE FUNCTIONS
       // =========================
@@ -195,24 +215,52 @@
 
         const btn = event.currentTarget;
         const isHospital = btn.classList.contains("hospital-toggle");
+        const isDoctor = btn.classList.contains("doctor-toggle");
         const isOpen = el.style.display === "block";
 
-        // 🔒 Close other hospitals (ONLY hospitals)
+        // ==================================================
+        // 🏥 HOSPITAL LOGIC (auto-close + reset everything)
+        // ==================================================
         if (isHospital && !isOpen) {
           document.querySelectorAll(".hospital-toggle.active").forEach((otherBtn) => {
             if (otherBtn !== btn) {
-              const otherId = otherBtn.getAttribute("onclick").match(/'(.*?)'/)[1];
+              const otherId = otherBtn
+                .getAttribute("onclick")
+                .match(/'(.*?)'/)[1];
+
               const otherBody = document.getElementById(otherId);
-              if (otherBody) otherBody.style.display = "none";
+              if (otherBody) {
+                // Reset all doctors inside hospital
+                otherBody.querySelectorAll(".doctor-body").forEach((doctorBody) => {
+                  resetDoctorState(doctorBody);
+                  doctorBody.style.display = "none";
+                });
+
+                otherBody.style.display = "none";
+              }
+
               otherBtn.classList.remove("active");
             }
           });
         }
 
-        // Toggle current
+        // ==================================================
+        // 👨‍⚕️ DOCTOR LOGIC (manual close resets inner state)
+        // ==================================================
+        if (isDoctor && isOpen) {
+          // 👈 manual close detected
+          resetDoctorState(el);
+        }
+
+        // ==================================================
+        // Toggle current section
+        // ==================================================
         el.style.display = isOpen ? "none" : "block";
         btn.classList.toggle("active", !isOpen);
-      }
+}
+
+
+
 
 
 
