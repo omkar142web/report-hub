@@ -1732,7 +1732,7 @@ body {
   margin-left: auto;
   font-size: 14px;
   display: inline-block;
-  transition: transform 0.35s ease;
+  transition: transform 0.65s ease;
 }
 
 /* Rotate when open */
@@ -1751,7 +1751,7 @@ body {
   color: var(--text-dim);
 
   justify-self: center;   /* 👈 center inside 32px column */
-  transition: transform 0.35s ease, color 0.35s ease;
+  transition: transform 0.75s ease, color 0.35s ease;
   opacity: 0.7;
 }
 
