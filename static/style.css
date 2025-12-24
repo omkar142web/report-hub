@@ -446,18 +446,27 @@ input:focus {
 }
 .actions a:first-child:hover { 
     background: rgba(255,255,255,0.1); 
+    color: var(--accent); 
+    transition-duration: 0.30s;
+    box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .actions .delete {
     color: var(--danger) !important;
-    background: none;
+    background:  rgba(255,255,255,0.05);
     border: none;
     cursor: pointer;
     padding: 8px 12px;
     font-size: 0.85rem;
     font-weight: 600;
 }
-
+.actions .delete:hover {
+    background: #ef4444;
+    color: rgb(0, 0, 0) !important;
+    transition:
+    background-color 1.51s ease,
+    color 0.51s ;
+}
 
 
 
