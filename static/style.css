@@ -480,6 +480,18 @@ input:focus {
 }
 
 
+/* ------------------------------------------------------------ */
+
+.actions a {
+  display: flex;                 /* 🔥 key */
+  align-items: center;           /* vertical center */
+  justify-content: center;       /* horizontal center */
+
+  line-height: 1;                /* 🔥 removes baseline offset */
+}
+
+
+/* ------------------------------------------------------------ */
 
 
 
