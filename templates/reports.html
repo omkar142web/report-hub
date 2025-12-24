@@ -409,6 +409,28 @@ function resetDoctorState(doctorBody) {
           counter.textContent = query && anyMatch ? `( ${matchCount} result${matchCount > 1 ? "s" : ""} )` : "";
         }
 
+        // =========================
+        // 3. AUTO-EXPAND NEWEST PATIENT (🔥 PREMIUM)
+        // =========================
+        const firstPatientToggle = document.querySelector(".patient-toggle");
+
+        if (firstPatientToggle) {
+          const files = firstPatientToggle.nextElementSibling;
+
+          // open only if not already opened (safe)
+          if (files && files.style.display !== "block") {
+            files.style.display = "block";
+            firstPatientToggle.classList.add("active");
+
+            // optional: smooth focus
+            firstPatientToggle.scrollIntoView({
+              behavior: "smooth",
+              block: "center"
+            });
+          }
+        }
+
+
         searchInput.addEventListener("input", liveSearch);
         document.querySelector(".search-box").addEventListener("submit", (e) => {
           e.preventDefault();

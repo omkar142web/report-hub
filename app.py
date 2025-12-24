@@ -146,6 +146,22 @@ def get_next_index(folder_prefix):
 
 
 
+def get_latest_patient_upload(patient_data):
+    """
+    Returns datetime of latest uploaded file for a patient
+    """
+    if not patient_data["files"]:
+        return datetime.min
+
+    return max(
+        datetime.strptime(f["date"], "%b %d, %Y")
+        for f in patient_data["files"]
+    )
+
+
+
+
+
 def build_reports_data(prefix=None):
     data = {}
 
@@ -262,6 +278,20 @@ def build_reports_data(prefix=None):
             )[0]
 
         data[hospital][doctor][patient]["files"].append(file_obj)
+
+    # ==================================================
+    # 🔥 SORT PATIENTS BY LATEST UPLOAD (NEWEST FIRST)
+    # ==================================================
+    for hospital, doctors in data.items():
+        for doctor, patients in doctors.items():
+            doctors[doctor] = dict(
+                sorted(
+                    patients.items(),
+                    key=lambda item: get_latest_patient_upload(item[1]),
+                    reverse=True
+                )
+            )
+
 
     return data
 
@@ -891,7 +921,6 @@ def download_raw(public_id):
         download_name=filename,
         mimetype="text/plain"
     )
-
 
 
 
