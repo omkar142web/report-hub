@@ -2017,7 +2017,7 @@ body {
 /* =========================
    MOBILE — FULL SCREEN
 ========================= */
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
   .preview-content {
     width: 100%;
     height: 100%;
@@ -2027,5 +2027,49 @@ body {
   .preview-close {
     top: 10px;
     right: 10px;
+  }
+} */
+
+
+
+
+@media (max-width: 768px) {
+  .preview-modal.active {
+    display: flex;
+    align-items: center; /* Changed to center to prevent bottom cut-off */
+    justify-content: center;
+  }
+
+  .preview-content {
+    width: 100vw;
+    /* dvh is 'Dynamic Viewport Height' - the gold standard for mobile Chrome */
+    height: 100vh; 
+    height: 100dvh; 
+    
+    border-radius: 0;
+    position: fixed; /* Ensures it locks to the viewport */
+    inset: 0;
+  }
+
+  #previewBody {
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* Prevent the modal itself from double-scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #previewBody iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .preview-close {
+    /* Positioned relative to the viewport for easy thumb access */
+    top: 12px;
+    right: 12px;
+    width: 38px; /* Slightly bigger for touch targets (min 44px is ideal for accessibility) */
+    height: 38px;
+    z-index: 20; /* Keep it above the iframe */
   }
 }
