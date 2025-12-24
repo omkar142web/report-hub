@@ -41,22 +41,44 @@
           {% set idx = namespace(i=0) %}
           {% set h = namespace(i=0) %}
 
-          {% for hospital, doctors in data.items() %}
-            {% set h.i = h.i + 1 %}
-            <!-- <section class="hospital-section">
-              <button class="group-toggle hospital-toggle" onclick="toggleGroup('hospital-{{ h.i }}')">
-                🏥 {{ hospital.replace("_", " ") | title }}
-              </button>
+          {% for hospital, doctors in data.items() if hospital != '_meta' %}
 
-              <div class="group-body" id="hospital-{{ h.i }}"> -->
+            {% set h.i = h.i + 1 %}
+
+
 
                 <section class="hospital-section">
 
                 {% if view == "all" %}
-                <button class="group-toggle hospital-toggle"
-                        onclick="toggleGroup('hospital-{{ h.i }}')">
-                  🏥 {{ hospital.replace("_", " ") | upper }}
-                </button>
+                <div class="group-toggle hospital-toggle"
+                      onclick="toggleGroup('hospital-{{ h.i }}')">
+
+                    <span>🏥 {{ hospital.replace("_", " ") | upper }}</span>
+
+                    <div class="patient-info-wrapper" onclick="event.stopPropagation()">
+                      <span class="file-count-text">
+                        ({{ doctors._meta.doctor_count }} doctors)
+                      </span>
+                      <span class="info-icon">ⓘ</span>
+
+                      <div class="patient-info-card" onclick="event.stopPropagation()">
+                        <div class="patient-header">🏥 {{ hospital | upper }}</div>
+
+                        <div class="patient-stats">
+                          <div>👨‍⚕️ Doctors : {{ doctors._meta.doctor_count }}</div>
+                          <div>👤 Patients : {{ doctors._meta.patient_count }}</div>
+                          <div>📁 Files : {{ doctors._meta.file_count }}</div>
+                        </div>
+
+                        <a href="{{ url_for('download_hospital_zip', hospital=hospital) }}"
+                          class="zip-btn"
+                          onclick="event.stopPropagation()">
+                          Download ZIP
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
                 {% endif %}
 
                 <div class="group-body"
@@ -64,13 +86,42 @@
                     {% if view != "all" %}style="display:block"{% endif %}>
 
 
-                {% for doctor, patients in doctors.items() %}
+                {% for doctor, patients in doctors.items() if doctor != '_meta' %}
+
                   <section class="doctor-section">
                     {% if view != "doctor" %}
-                    <button class="group-toggle doctor-toggle"
-                            onclick="toggleGroup('doctor-{{ h.i }}-{{ loop.index }}')">
-                      👨‍⚕️ {{ doctor.replace("_", " ") | upper }}
-                    </button>
+                    <div class="group-toggle doctor-toggle"
+                          onclick="toggleGroup('doctor-{{ h.i }}-{{ loop.index }}')">
+
+                        <span>👨‍⚕️ {{ doctor.replace("_", " ") | upper }}</span>
+
+                        <div class="patient-info-wrapper" onclick="event.stopPropagation()">
+                          <span class="file-count-text">
+                            ({{ patients._meta.patient_count }} patients)
+                          </span>
+                          <span class="info-icon">ⓘ</span>
+
+                          <div class="patient-info-card" onclick="event.stopPropagation()">
+                            <div class="patient-header">👨‍⚕️ {{ doctor | upper }}</div>
+
+                            <div class="patient-stats">
+                              <div>👤 Patients : {{ patients._meta.patient_count }}</div>
+                              <div>📁 Files : {{ patients._meta.file_count }}</div>
+                            </div>
+
+                            <a href="{{ url_for(
+                                  'download_doctor_zip',
+                                  hospital=hospital,
+                                  doctor=doctor
+                                ) }}"
+                              class="zip-btn"
+                              onclick="event.stopPropagation()">
+                              Download ZIP
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+
                     {% endif %}
 
 
@@ -82,7 +133,8 @@
                             style="display:none"
                           {% endif %}>
 
-                      {% for patient, patient_data in patients.items() %}
+                      {% for patient, patient_data in patients.items() if patient != '_meta' %}
+
                         {% set idx.i = idx.i + 1 %}
 
                         <section class="patient-section">

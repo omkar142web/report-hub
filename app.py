@@ -292,6 +292,40 @@ def build_reports_data(prefix=None):
                 )
             )
 
+    # ==================================================
+    # AGGREGATE COUNTS (Hospital & Doctor)
+    # ==================================================
+    for hospital, doctors in data.items():
+        hospital_doctors = 0
+        hospital_patients = 0
+        hospital_files = 0
+
+        for doctor, patients in doctors.items():
+            hospital_doctors += 1
+
+            doctor_patients = 0
+            doctor_files = 0
+
+            for patient_data in patients.values():
+                doctor_patients += 1
+                doctor_files += len(patient_data["files"])
+
+            # attach meta to doctor
+            patients["_meta"] = {
+                "patient_count": doctor_patients,
+                "file_count": doctor_files
+            }
+
+            hospital_patients += doctor_patients
+            hospital_files += doctor_files
+
+        # attach meta to hospital
+        doctors["_meta"] = {
+            "doctor_count": hospital_doctors,
+            "patient_count": hospital_patients,
+            "file_count": hospital_files
+        }
+
 
     return data
 
@@ -851,6 +885,97 @@ def download_patient_zip(hospital, doctor, patient):
         as_attachment=True,
         download_name=f"{patient}_reports.zip"
     )
+
+
+
+@app.route("/download-hospital/<hospital>")
+@login_required
+def download_hospital_zip(hospital):
+    prefix = f"{hospital}/"
+
+    result = cloudinary.api.resources(
+        type="upload",
+        prefix=prefix,
+        max_results=500
+    )
+
+    files = result.get("resources", [])
+    if not files:
+        flash("No files found for this hospital.", "error")
+        return redirect(url_for("reports"))
+
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for f in files:
+            try:
+                r = requests.get(f["secure_url"], timeout=20)
+                r.raise_for_status()
+
+                name = f["public_id"].split("/")[-1]
+                if "format" in f:
+                    name += f".{f['format']}"
+
+                zipf.writestr(name, r.content)
+            except Exception:
+                continue
+
+    zip_buffer.seek(0)
+
+    return send_file(
+        zip_buffer,
+        as_attachment=True,
+        download_name=f"{hospital}_ALL_RECORDS.zip",
+        mimetype="application/zip"
+    )
+
+
+
+
+@app.route("/download-doctor/<hospital>/<doctor>")
+@login_required
+def download_doctor_zip(hospital, doctor):
+    prefix = f"{hospital}/{doctor}/"
+
+    result = cloudinary.api.resources(
+        type="upload",
+        prefix=prefix,
+        max_results=500
+    )
+
+    files = result.get("resources", [])
+    if not files:
+        flash("No files found for this doctor.", "error")
+        return redirect(url_for("reports"))
+
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for f in files:
+            try:
+                r = requests.get(f["secure_url"], timeout=20)
+                r.raise_for_status()
+
+                name = f["public_id"].split("/")[-1]
+                if "format" in f:
+                    name += f".{f['format']}"
+
+                zipf.writestr(name, r.content)
+            except Exception:
+                continue
+
+    zip_buffer.seek(0)
+
+    return send_file(
+        zip_buffer,
+        as_attachment=True,
+        download_name=f"{doctor}_ALL_PATIENTS.zip",
+        mimetype="application/zip"
+    )
+
+
+
+
 
 
 @app.route("/api/change-password", methods=["POST"])
