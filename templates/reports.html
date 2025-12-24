@@ -409,6 +409,32 @@ function resetDoctorState(doctorBody) {
           counter.textContent = query && anyMatch ? `( ${matchCount} result${matchCount > 1 ? "s" : ""} )` : "";
         }
 
+
+
+        // =========================
+        // 2.5 AUTO-EXPAND LATEST DOCTOR (🔥 PREMIUM)
+        // =========================
+        const firstDoctorToggle = document.querySelector(".doctor-toggle");
+
+        if (firstDoctorToggle) {
+          const doctorBodyId = firstDoctorToggle
+            .getAttribute("onclick")
+            ?.match(/'(.*?)'/)?.[1];
+
+          const doctorBody = doctorBodyId
+            ? document.getElementById(doctorBodyId)
+            : null;
+
+          if (doctorBody && doctorBody.style.display !== "block") {
+            doctorBody.style.display = "block";
+            firstDoctorToggle.classList.add("active");
+          }
+        }
+
+
+
+
+
         // =========================
         // 3. AUTO-EXPAND NEWEST PATIENT (🔥 PREMIUM)
         // =========================
