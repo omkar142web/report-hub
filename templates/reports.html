@@ -62,18 +62,18 @@
                       <span class="info-icon">ⓘ</span>
 
                       <div class="patient-info-card" onclick="event.stopPropagation()">
-                        <div class="patient-header">🏥 {{ hospital | upper }}</div>
+                        <div class="patient-header">🏥 {{ hospital | upper }} &nbsp;&nbsp; </div>
 
-                        <div class="patient-stats">
-                          <div>👨‍⚕️ Doctors : {{ doctors._meta.doctor_count }}</div>
-                          <div>👤 Patients : {{ doctors._meta.patient_count }}</div>
-                          <div>📁 Files : {{ doctors._meta.file_count }}</div>
+                        <div class="patient-stats" >
+                          <div>👨‍⚕️ Doctors : {{ doctors._meta.doctor_count }} &nbsp;&nbsp; </div>
+                          <div>👤 Patients : {{ doctors._meta.patient_count }} &nbsp; </div>
+                          <div>📁 Files : {{ doctors._meta.file_count }} &nbsp; </div>
                         </div>
 
                         <a href="{{ url_for('download_hospital_zip', hospital=hospital) }}"
                           class="zip-btn"
                           onclick="event.stopPropagation()">
-                          Download ZIP
+                          Download
                         </a>
                       </div>
                     </div>
@@ -102,11 +102,11 @@
                           <span class="info-icon">ⓘ</span>
 
                           <div class="patient-info-card" onclick="event.stopPropagation()">
-                            <div class="patient-header">👨‍⚕️ {{ doctor | upper }}</div>
+                            <div class="patient-header">👨‍⚕️ {{ doctor | upper }} &nbsp;&nbsp; </div>
 
                             <div class="patient-stats">
-                              <div>👤 Patients : {{ patients._meta.patient_count }}</div>
-                              <div>📁 Files : {{ patients._meta.file_count }}</div>
+                              <div>👤 Patients : {{ patients._meta.patient_count }} &nbsp; </div>
+                              <div>📁 Files : {{ patients._meta.file_count }} &nbsp; </div>
                             </div>
 
                             <a href="{{ url_for(
@@ -116,7 +116,7 @@
                                 ) }}"
                               class="zip-btn"
                               onclick="event.stopPropagation()">
-                              Download ZIP
+                              Download 
                             </a>
                           </div>
                         </div>
@@ -355,11 +355,17 @@ function resetDoctorState(doctorBody) {
         }
 
         wrappers.forEach((wrapper) => {
+  
+
           const icon = wrapper.querySelector(".info-icon");
-          icon.addEventListener("click", (e) => {
+          const countText = wrapper.querySelector(".file-count-text");
+
+          /* shared toggle function */
+          function toggleInfo(e) {
             e.stopPropagation();
             const isLocked = wrapper.dataset.locked === "true";
             closeOthers(wrapper);
+
             if (isLocked) {
               wrapper.classList.remove("open");
               wrapper.dataset.locked = "false";
@@ -367,7 +373,19 @@ function resetDoctorState(doctorBody) {
               wrapper.classList.add("open");
               wrapper.dataset.locked = "true";
             }
-          });
+          }
+
+          /* ⓘ click */
+          icon.addEventListener("click", toggleInfo);
+
+          /* count text click */
+          if (countText) {
+            countText.addEventListener("click", toggleInfo);
+          }
+
+
+
+
 
           wrapper.addEventListener("mouseenter", () => {
             if (wrapper.dataset.locked !== "true" && window.matchMedia("(hover: hover)").matches) {

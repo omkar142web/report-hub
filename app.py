@@ -1049,7 +1049,11 @@ def download_raw(public_id):
 
 
 
-
+# ✅ TEMP DEV LOGIN (REMOVE BEFORE PRODUCTION)
+@app.route("/dev-login")
+def dev_login():
+    session["doctor"] = True
+    return redirect(url_for("reports"))
 
 
 
