@@ -412,6 +412,29 @@ function resetDoctorState(doctorBody) {
 
 
         // =========================
+        // 2.4 AUTO-EXPAND LATEST HOSPITAL (🔥 PREMIUM)
+        // =========================
+        const firstHospitalToggle = document.querySelector(".hospital-toggle");
+
+        if (firstHospitalToggle) {
+          const hospitalBodyId = firstHospitalToggle
+            .getAttribute("onclick")
+            ?.match(/'(.*?)'/)?.[1];
+
+          const hospitalBody = hospitalBodyId
+            ? document.getElementById(hospitalBodyId)
+            : null;
+
+          if (hospitalBody && hospitalBody.style.display !== "block") {
+            hospitalBody.style.display = "block";
+            firstHospitalToggle.classList.add("active");
+          }
+        }
+
+
+
+
+        // =========================
         // 2.5 AUTO-EXPAND LATEST DOCTOR (🔥 PREMIUM)
         // =========================
         const firstDoctorToggle = document.querySelector(".doctor-toggle");
