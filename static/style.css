@@ -340,12 +340,15 @@ input:focus {
     padding: 20px;
     border-radius: 16px;
     position: relative;
+    transition: all 1.0s ease;
 }
 
 .card:hover {
-    transform: translateY(-5px);
+    /* transform: translateY(-5px); */
+    /* card was moving cuz of this */
     background: rgba(30, 41, 59, 0.8);
     border-color: var(--accent);
+    transition: all 1.0s ease;
 }
 
 .file-name {
@@ -1198,7 +1201,8 @@ body {
 
     margin-bottom: 14px;   /* try 12–18px */
 
-    transition: transform 0.15s ease;
+    transition: transform 0.5s ease;
+    /* patient card transition */
 
 
     overflow: visible; /* allow popup to escape */
@@ -1221,6 +1225,9 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    transition: color 0.4s ease;
+    /* patient card, reverse hover transition */
 }
 
 /* Right side container */
