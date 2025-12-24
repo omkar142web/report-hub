@@ -2004,6 +2004,18 @@ body {
 
 
 
+@media (hover: hover) {
+  .card img:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+}
+
+#previewBody iframe {
+  background: #020617;
+}
+
+
 
 
 
@@ -2029,6 +2041,9 @@ body {
     right: 10px;
   }
 } */
+
+
+
 
 
 
@@ -2073,3 +2088,9 @@ body {
     z-index: 20; /* Keep it above the iframe */
   }
 }
+
+/* -------------------------------------------------------------------------- */
+
+
+
+

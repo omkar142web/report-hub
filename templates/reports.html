@@ -528,6 +528,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeBtn = document.querySelector(".preview-close");
   const backdrop = document.querySelector(".preview-backdrop");
 
+  // =========================
+  // OPEN PREVIEW
+  // =========================
   window.openPreview = function (url, type) {
     previewBody.innerHTML = "";
 
@@ -545,28 +548,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
     modal.classList.add("active");
     document.body.style.overflow = "hidden";
+
+    // ✅ push fake history entry
+    history.pushState({ previewOpen: true }, "");
   };
 
+  // =========================
+  // CLOSE PREVIEW
+  // =========================
   function closePreview() {
     modal.classList.remove("active");
     previewBody.innerHTML = "";
     document.body.style.overflow = "";
+
+    // ✅ safely pop history
+    if (history.state && history.state.previewOpen) {
+      history.back();
+    }
   }
 
   closeBtn.addEventListener("click", closePreview);
   backdrop.addEventListener("click", closePreview);
 
+  // ESC (desktop)
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && modal.classList.contains("active")) {
       closePreview();
     }
   });
+
+  // =========================
+  // MOBILE BACK BUTTON (🔥 KEY PART)
+  // =========================
+  window.addEventListener("popstate", () => {
+    if (modal.classList.contains("active")) {
+      closePreview();
+    }
+  });
+
 });
-
-
-
-
 </script>
+
 
 
 
