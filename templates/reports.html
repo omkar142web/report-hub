@@ -122,10 +122,13 @@
   <div class="file-date">Uploaded on: {{ file_obj.date }}</div>
 
   {% if file_obj.is_pdf %}
-  <span class="badge pdf">PDF</span>
-  <a href="{{ file_obj.url }}" target="_blank">
-    <img src="{{ file_obj.thumbnail_url }}">
-  </a>
+    <span class="badge pdf">PDF</span>
+    <img
+      src="{{ file_obj.thumbnail_url }}"
+      onclick="openPreview('{{ file_obj.url }}', 'pdf')"
+      style="cursor: zoom-in;"
+    >
+
 
 {% elif file_obj.is_video %}
   <span class="badge video">VIDEO</span>
@@ -140,8 +143,13 @@
 
 {% else %}
   <span class="badge img">IMG</span>
-  <img src="{{ file_obj.url }}">
+  <img
+    src="{{ file_obj.url }}"
+    onclick="openPreview('{{ file_obj.url }}', 'image')"
+    style="cursor: zoom-in;"
+  >
 {% endif %}
+
 
 
   <!-- ✅ ADD ACTIONS EXACTLY HERE -->
@@ -486,6 +494,81 @@ function resetDoctorState(doctorBody) {
           liveSearch();
         });
       });
+
+
+
+
+
     </script>
+
+
+    <!-- ========================= -->
+    <!-- GLOBAL FILE PREVIEW MODAL -->
+    <!-- ========================= -->
+    <div id="previewModal" class="preview-modal">
+      <div class="preview-backdrop"></div>
+
+      <div class="preview-content">
+        <button class="preview-close" aria-label="Close preview">✕</button>
+        <div id="previewBody"></div>
+      </div>
+    </div>
+
+
+<script>
+
+// =========================
+// FILE PREVIEW MODAL LOGIC
+// =========================
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const modal = document.getElementById("previewModal");
+  const previewBody = document.getElementById("previewBody");
+  const closeBtn = document.querySelector(".preview-close");
+  const backdrop = document.querySelector(".preview-backdrop");
+
+  window.openPreview = function (url, type) {
+    previewBody.innerHTML = "";
+
+    if (type === "image") {
+      const img = document.createElement("img");
+      img.src = url;
+      previewBody.appendChild(img);
+    }
+
+    if (type === "pdf") {
+      const iframe = document.createElement("iframe");
+      iframe.src = url;
+      previewBody.appendChild(iframe);
+    }
+
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
+  };
+
+  function closePreview() {
+    modal.classList.remove("active");
+    previewBody.innerHTML = "";
+    document.body.style.overflow = "";
+  }
+
+  closeBtn.addEventListener("click", closePreview);
+  backdrop.addEventListener("click", closePreview);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("active")) {
+      closePreview();
+    }
+  });
+});
+
+
+
+
+</script>
+
+
+
   </body>
 </html>
