@@ -1357,11 +1357,11 @@ body {
 }
 
 .patient-toggle.active  {
-    border: 1px solid #5C7EA3;
+    border: 1px solid #85929E;
 }
 .patient-toggle.active  {
-    border-left: 4px solid #5C7EA3;  /* added by me */
-    border-right: 4px solid #5C7EA3;  /* added by me */
+    border-left: 4px solid #85929E;  /* added by me */
+    border-right: 4px solid #85929E;  /* added by me */
 }
 
 
