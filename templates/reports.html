@@ -53,7 +53,10 @@
                 <div class="group-toggle hospital-toggle"
                       onclick="toggleGroup('hospital-{{ h.i }}')">
 
-                    <span>🏥 {{ hospital.replace("_", " ") | upper }}</span>
+                    <span class="group-title">
+                      🏥 {{ hospital.replace("_", " ") | upper }}
+                    </span>
+
 
                     <div class="patient-info-wrapper" onclick="event.stopPropagation()">
                       <span class="file-count-text">
@@ -93,7 +96,10 @@
                     <div class="group-toggle doctor-toggle"
                           onclick="toggleGroup('doctor-{{ h.i }}-{{ loop.index }}')">
 
-                        <span>👨‍⚕️ {{ doctor.replace("_", " ") | upper }}</span>
+                        <span class="group-title">
+                          👨‍⚕️ {{ doctor.replace("_", " ") | upper }}
+                        </span>
+
 
                         <div class="patient-info-wrapper" onclick="event.stopPropagation()">
                           <span class="file-count-text">

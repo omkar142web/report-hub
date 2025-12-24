@@ -2161,3 +2161,22 @@ body {
 }
 
 
+
+/* --------------------------------------------------------- */
+/* name issue doctor / hospital wrapping fix */
+
+.group-title {
+  min-width: 0;                 /* 🔴 REQUIRED */
+  max-width: 110%;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;        /* 👈 max 2 lines */
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  line-height: 1.25;
+  word-break: break-word;
+}
+
