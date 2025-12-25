@@ -65,7 +65,7 @@
                       <span class="info-icon">ⓘ</span>
 
                       <div class="patient-info-card" onclick="event.stopPropagation()">
-                        <div class="patient-header">🏥 {{ hospital | upper }} </div>
+                        <div class="patient-header">🏥 {{ hospital | upper }} &nbsp; </div>
 
                         <div class="patient-stats" >
                           <div>👨‍⚕️ Doctors : {{ doctors._meta.doctor_count }} &nbsp; </div>
@@ -112,7 +112,7 @@
                           <span class="info-icon">ⓘ</span>
 
                           <div class="patient-info-card" onclick="event.stopPropagation()">
-                            <div class="patient-header">👨‍⚕️ {{ doctor | upper }} </div>
+                            <div class="patient-header">👨‍⚕️ {{ doctor | upper }} &nbsp; </div>
 
                             <div class="patient-stats">
                               <div>👤 Patients : {{ patients._meta.patient_count }} &nbsp; </div>
@@ -155,11 +155,11 @@
                               <span class="info-icon">ⓘ</span>
 
                               <div class="patient-info-card" onclick="event.stopPropagation()">
-                                <div class="patient-header">👤 {{ patient }}</div>
+                                <div class="patient-header">👤 {{ patient }} &nbsp; </div>
                                 <div class="patient-stats">
-                                  <div>📃 PDFs : {{ patient_data.pdf_count }}</div>
-                                  <div>🖼️ Images : {{ patient_data.image_count }}</div>
-                                  <div>🎞️ Videos : {{ patient_data.video_count }}</div>
+                                  <div>📃 PDFs : {{ patient_data.pdf_count }} &nbsp; </div>
+                                  <div>🖼️ Images : {{ patient_data.image_count }} &nbsp; </div>
+                                  <div>🎞️ Videos : {{ patient_data.video_count }} &nbsp; </div>
                                 </div>
 
                                 <a href="{{ url_for(
