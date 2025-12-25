@@ -318,6 +318,23 @@ function resetDoctorState(doctorBody) {
           resetDoctorState(el);
         }
 
+
+        // ==================================================
+        // 🏥 HOSPITAL MANUAL CLOSE → RESET DOCTORS + PATIENTS
+        // ==================================================
+        if (isHospital && isOpen) {
+          el.querySelectorAll(".doctor-body").forEach((doctorBody) => {
+            resetDoctorState(doctorBody);        // closes all patient lists
+            doctorBody.style.display = "none";   // closes doctor sections
+          });
+
+          // remove doctor active highlights
+          el.querySelectorAll(".doctor-toggle.active").forEach(btn => {
+            btn.classList.remove("active");
+          });
+        }
+
+
         // ==================================================
         // Toggle current section
         // ==================================================
