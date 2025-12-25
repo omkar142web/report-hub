@@ -65,11 +65,11 @@
                       <span class="info-icon">ⓘ</span>
 
                       <div class="patient-info-card" onclick="event.stopPropagation()">
-                        <div class="patient-header">🏥 {{ hospital | upper }} &nbsp;&nbsp; </div>
+                        <div class="patient-header">🏥 {{ hospital | upper }} </div>
 
                         <div class="patient-stats" >
-                          <div>👨‍⚕️ Doctors : {{ doctors._meta.doctor_count }} &nbsp;&nbsp; </div>
-                          <div>👤 Patient : {{ doctors._meta.patient_count }}  &nbsp; </div>
+                          <div>👨‍⚕️ Doctors : {{ doctors._meta.doctor_count }} &nbsp; </div>
+                          <div>👤 Patients : {{ doctors._meta.patient_count }}  &nbsp; </div>
                           <div>📁 Files : {{ doctors._meta.file_count }} &nbsp; </div>
                         </div>
 
@@ -112,7 +112,7 @@
                           <span class="info-icon">ⓘ</span>
 
                           <div class="patient-info-card" onclick="event.stopPropagation()">
-                            <div class="patient-header">👨‍⚕️ {{ doctor | upper }} &nbsp;&nbsp; </div>
+                            <div class="patient-header">👨‍⚕️ {{ doctor | upper }} </div>
 
                             <div class="patient-stats">
                               <div>👤 Patients : {{ patients._meta.patient_count }} &nbsp; </div>
@@ -168,7 +168,7 @@
                                     doctor=doctor,
                                     patient=patient
                                 ) }}" class="zip-btn" onclick="event.stopPropagation()">
-                                  Download
+                                Download
                                 </a>
 
                               </div>

@@ -1033,7 +1033,7 @@ input:focus {
 
     /* compact height for small info card */
     padding: 6px 8px;
-    padding-left: 20px; /* space reserved for icon */
+    padding-left: 25px; /* space reserved for icon */
 
     border-radius: 999px;
     background: linear-gradient(135deg, #6f6af8, #7c7cff);
@@ -1291,7 +1291,10 @@ body {
     /* 👇 combine X + Y movement */
     transform: translate(15px, -12px);
 
-    width: min(140px, calc(100vw - 32px));
+    width: fit-content;
+    max-width: min(150px, 85vw);
+    min-width: 140px;
+
     z-index: 1000;
 
     background: rgba(30, 41, 59, 0.98);
