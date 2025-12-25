@@ -95,6 +95,9 @@
                     {% if view != "doctor" %}
                     <div class="group-toggle doctor-toggle"
                           onclick="toggleGroup('doctor-{{ h.i }}-{{ loop.index }}')">
+                    {% else %}
+                    <div class="group-toggle doctor-toggle active">
+
 
                         <span class="group-title">
                           👨‍⚕️ {{ doctor.replace("_", " ") | upper }}
