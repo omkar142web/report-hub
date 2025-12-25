@@ -447,10 +447,110 @@ function resetDoctorState(doctorBody) {
           el.querySelectorAll("mark").forEach((m) => m.replaceWith(m.textContent));
         }
 
+
+
+
+
         function highlight(el, term) {
-          const regex = new RegExp(`(${term})`, "gi");
-          el.innerHTML = el.textContent.replace(regex, "<mark>$1</mark>");
+        const regex = new RegExp(`(${term})`, "i");   // ❌ no "g"
+        el.innerHTML = el.textContent.replace(regex, "<mark>$1</mark>");
+      }
+
+
+        function ensureParentsOpen(section) {
+          const doctorSection = section.closest(".doctor-section");
+          const hospitalSection = section.closest(".hospital-section");
+
+          // ---- Doctor ----
+          if (doctorSection) {
+            const doctorToggle = doctorSection.querySelector(".doctor-toggle");
+            const doctorBody = doctorSection.querySelector(".doctor-body");
+
+            if (doctorBody && doctorBody.style.display !== "block") {
+              doctorBody.style.display = "block";
+            }
+            if (doctorToggle && !doctorToggle.classList.contains("active")) {
+              doctorToggle.classList.add("active");
+            }
+          }
+
+          // ---- Hospital ----
+          if (hospitalSection) {
+            const hospitalToggle = hospitalSection.querySelector(".hospital-toggle");
+            const hospitalBody = hospitalSection.querySelector(".group-body");
+
+            if (hospitalBody && hospitalBody.style.display !== "block") {
+              hospitalBody.style.display = "block";
+            }
+            if (hospitalToggle && !hospitalToggle.classList.contains("active")) {
+              hospitalToggle.classList.add("active");
+            }
+          }
         }
+
+
+function resetFullUIState() {
+  // Show everything back
+  document.querySelectorAll(".hospital-section").forEach(h => h.style.display = "");
+  document.querySelectorAll(".doctor-section").forEach(d => d.style.display = "");
+  document.querySelectorAll(".patient-section").forEach(p => p.style.display = "");
+
+  // Restore ALL file cards visibility (important)
+  document.querySelectorAll(".card").forEach(c => c.style.display = "");
+
+  // Close all hospital groups
+  document.querySelectorAll(".group-body").forEach(g => g.style.display = "none");
+  document.querySelectorAll(".hospital-toggle.active").forEach(t => t.classList.remove("active"));
+
+  // Close all doctor groups
+  document.querySelectorAll(".doctor-body").forEach(g => g.style.display = "none");
+  document.querySelectorAll(".doctor-toggle.active").forEach(t => t.classList.remove("active"));
+
+  // Close all patient lists
+  document.querySelectorAll(".patient-files").forEach(p => p.style.display = "none");
+  document.querySelectorAll(".patient-toggle.active").forEach(btn => btn.classList.remove("active"));
+
+  // Remove highlights
+  document.querySelectorAll("mark").forEach(m => m.replaceWith(m.textContent));
+
+  // =========================
+  // PREMIUM AUTO EXPAND RESTORE
+  // =========================
+
+  // Auto open first hospital
+  const firstHospitalToggle = document.querySelector(".hospital-toggle");
+  if (firstHospitalToggle) {
+    const hid = firstHospitalToggle.getAttribute("onclick")?.match(/'(.*?)'/)?.[1];
+    const body = hid ? document.getElementById(hid) : null;
+    if (body) {
+      body.style.display = "block";
+      firstHospitalToggle.classList.add("active");
+    }
+  }
+
+  // Auto open first doctor
+  const firstDoctorToggle = document.querySelector(".doctor-toggle");
+  if (firstDoctorToggle) {
+    const did = firstDoctorToggle.getAttribute("onclick")?.match(/'(.*?)'/)?.[1];
+    const body = did ? document.getElementById(did) : null;
+    if (body) {
+      body.style.display = "block";
+      firstDoctorToggle.classList.add("active");
+    }
+  }
+
+  // DO NOT auto open patient → prevents blank space
+  const firstPatientToggle = document.querySelector(".patient-toggle");
+  if (firstPatientToggle) {
+    const files = firstPatientToggle.nextElementSibling;
+    if (files) {
+      files.style.display = "none";
+      firstPatientToggle.classList.remove("active");
+    }
+  }
+}
+
+
 
         function liveSearch() {
           const query = searchInput.value.trim().toLowerCase();
@@ -459,59 +559,140 @@ function resetDoctorState(doctorBody) {
           let firstOpened = false;
           const sectionsArray = getPatientSections();
 
-          sectionsArray.forEach((section) => {
-            const patientNameEl = section.querySelector(".patient-name");
-            const patientNameText = patientNameEl.textContent;
-            let patientMatch = false;
+          // 🔄 RESET UI when query empty
+          if (!query) {
+            resetFullUIState();
+            noResult.style.display = "none";
+            counter.textContent = "";
+            return;
+          }
 
-            removeHighlights(patientNameEl);
+          // ========== PRIORITY SORT ==========
+        function getPriorityScore(name) {
+          // remove emoji, icons & extra spaces
+          const clean = name
+            .replace(/[^\w\s]/g, "")   // remove emoji & symbols
+            .trim()
+            .toLowerCase();
 
-            if (query && patientNameText.toLowerCase().includes(query)) {
-              highlight(patientNameEl, query);
-              patientMatch = true;
-            }
+          if (clean === query) return [3, clean.length, clean];
+          if (clean.startsWith(query)) return [2, clean.length, clean];
+          if (clean.includes(query)) return [1, clean.length, clean];
 
-            const fileCards = section.querySelectorAll(".card");
-            let fileMatchFound = false;
+          return [0, 9999, clean];
+        }
 
-            fileCards.forEach((card) => {
-              const fileNameEl = card.querySelector(".file-name");
-              const fileNameText = fileNameEl.textContent;
-              removeHighlights(fileNameEl);
 
-              if (!query) {
-                card.style.display = "";
-                return;
-              }
-              if (fileNameText.toLowerCase().includes(query)) {
-                highlight(fileNameEl, query);
-                card.style.display = "";
-                fileMatchFound = true;
-              } else {
-                card.style.display = "none";
-              }
-            });
+  const patientParent = document.getElementById("patientsContainer");
 
-            const filesContainer = section.querySelector(".patient-files");
-            const toggleBtn = section.querySelector(".patient-toggle");
+  // We'll collect matched patient sections for sorting
+  let matchedSections = [];
 
-            if (!query || patientMatch || fileMatchFound) {
-              section.style.display = "";
-              anyMatch = true;
-              matchCount++;
-              if (query && !firstOpened) {
-                filesContainer.style.display = "block";
-                toggleBtn.classList.add("active");
-                firstOpened = true;
-              }
-            } else {
-              section.style.display = "none";
-            }
+      sectionsArray.forEach((section) => {
+        const patientNameEl = section.querySelector(".patient-name");
+        const patientNameText = patientNameEl.textContent.trim();
+        let patientMatch = false;
+
+        removeHighlights(patientNameEl);
+
+        if (patientNameText.toLowerCase().includes(query)) {
+          highlight(patientNameEl, query);
+          patientMatch = true;
+        }
+
+        const fileCards = section.querySelectorAll(".card");
+        
+        let fileMatchFound = false;
+
+        fileCards.forEach((card) => {
+          const fileNameEl = card.querySelector(".file-name");
+          const fileNameText = fileNameEl.textContent;
+          removeHighlights(fileNameEl);
+
+          if (fileNameText.toLowerCase().includes(query)) {
+            highlight(fileNameEl, query);
+            card.style.display = "";
+            fileMatchFound = true;
+          } else {
+            card.style.display = "none";
+          }
+        });
+
+        const filesContainer = section.querySelector(".patient-files");
+        const toggleBtn = section.querySelector(".patient-toggle");
+
+        if (patientMatch || fileMatchFound) {
+          section.style.display = "";
+          ensureParentsOpen(section);
+
+          if (!firstOpened) {
+            filesContainer.style.display = "block";
+            toggleBtn.classList.add("active");
+            firstOpened = true;
+          }
+
+          anyMatch = true;
+          matchCount++;
+
+          matchedSections.push({
+            section,
+            score: getPriorityScore(patientNameText)
           });
 
-          noResult.style.display = anyMatch || !query ? "none" : "block";
-          counter.textContent = query && anyMatch ? `( ${matchCount} result${matchCount > 1 ? "s" : ""} )` : "";
+        } else {
+          section.style.display = "none";
         }
+      });
+
+      // ===== GROUP BY DOCTOR BODY =====
+      const groupMap = new Map();
+
+      matchedSections.forEach(m => {
+        const parent = m.section.parentNode;
+
+        if (!groupMap.has(parent)) {
+          groupMap.set(parent, []);
+        }
+
+        groupMap.get(parent).push(m);
+      });
+
+// ===== SORT WITHIN EACH DOCTOR =====
+        groupMap.forEach((list, parent) => {
+          list.sort((a, b) => {
+            // Higher priority first
+            if (b.score[0] !== a.score[0]) return b.score[0] - a.score[0];
+            // Shorter name
+            if (a.score[1] !== b.score[1]) return a.score[1] - b.score[1];
+            // Alphabetical fallback
+            return a.score[2].localeCompare(b.score[2]);
+          });
+
+          // Apply order inside doctor group
+          list.forEach(m => parent.appendChild(m.section));
+        });
+
+
+          // Hide doctors with no visible patients
+          document.querySelectorAll(".doctor-section").forEach(doc => {
+            const visiblePatients =
+              doc.querySelectorAll(".patient-section:not([style*='display: none'])");
+            doc.style.display = visiblePatients.length ? "" : "none";
+          });
+
+          // Hide hospitals with no visible doctors
+          document.querySelectorAll(".hospital-section").forEach(hos => {
+            const visibleDocs =
+              hos.querySelectorAll(".doctor-section:not([style*='display: none'])");
+            hos.style.display = visibleDocs.length ? "" : "none";
+          });
+
+          noResult.style.display = anyMatch ? "none" : "block";
+          counter.textContent =
+            anyMatch ? `( ${matchCount} result${matchCount > 1 ? "s" : ""} )` : "";
+        }
+
+
 
 
 
@@ -683,6 +864,79 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 });
+
+
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("button.delete");
+  if (!btn) return;
+
+  e.preventDefault();
+
+  const form = btn.closest("form");
+  const card = form.closest(".card");
+
+  // Capture parents BEFORE removing card from DOM
+  const patientSection = card.closest(".patient-section");
+  const filesWrapper = patientSection.querySelector(".patient-files");
+  const doctorSection = card.closest(".doctor-section");
+  const hospitalSection = card.closest(".hospital-section");
+
+  btn.disabled = true;
+  btn.textContent = "Deleting...";
+
+  try {
+    const res = await fetch(form.action, {
+      method: "POST",
+      body: new FormData(form)
+    });
+
+    if (!res.ok) throw new Error("Delete failed");
+
+    // Fade card
+    card.style.opacity = "0";
+
+    setTimeout(() => {
+      card.remove();
+
+      const remainingCards = filesWrapper.querySelectorAll(".card");
+
+      // =========================
+      // 🧤 If patient becomes empty
+      // =========================
+      if (remainingCards.length === 0) {
+        patientSection.remove();
+
+        // 👨‍⚕️ Remove doctor if empty
+        if (
+          doctorSection &&
+          doctorSection.querySelectorAll(".patient-section").length === 0
+        ) {
+          doctorSection.remove();
+        }
+
+        // 🏥 Remove hospital if empty
+        if (
+          hospitalSection &&
+          hospitalSection.querySelectorAll(".doctor-section").length === 0
+        ) {
+          hospitalSection.remove();
+        }
+      }
+    }, 300);
+
+  } catch (err) {
+    alert("❌ Delete failed. Refresh page.");
+    btn.disabled = false;
+    btn.textContent = "Delete";
+  }
+});
+</script>
+
+
+
+
+
 </script>
 
 
