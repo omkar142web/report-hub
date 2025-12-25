@@ -1348,6 +1348,9 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    margin-top: 1px;   /* or 14 / 16px */
+    margin-bottom: 6px;   /* or 14 / 16px */
+
 }
 
 .patient-stats {
