@@ -836,55 +836,51 @@ def delete_file():
 @app.route("/download-patient/<hospital>/<doctor>/<patient>")
 @login_required
 def download_patient_zip(hospital, doctor, patient):
-    patient = clean_name(patient)
-
     prefix = f"{hospital}/{doctor}/{patient}/"
 
-    result_img = cloudinary.api.resources(
-        type="upload",
-        resource_type="image",
-        prefix=prefix,
-        max_results=500
-    )
+    resources = []
+    for rt in ("image", "video", "raw"):
+        res = cloudinary.api.resources(
+            type="upload",
+            resource_type=rt,
+            prefix=prefix,
+            max_results=500
+        )
+        resources += res.get("resources", [])
 
-    result_vid = cloudinary.api.resources(
-        type="upload",
-        resource_type="video",
-        prefix=prefix,
-        max_results=500
-    )
-
-    all_files = result_img.get("resources", []) + result_vid.get("resources", [])
-
-    if not all_files:
+    if not resources:
         flash("No files found for this patient.", "error")
         return redirect(url_for("reports"))
 
     zip_buffer = io.BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for file in all_files:
-            file_url = file["secure_url"]
-            filename = file["public_id"].split("/")[-1]
-
-            if "format" in file and not filename.endswith(f".{file['format']}"):
-                filename = f"{filename}.{file['format']}"
-
+        for f in resources:
             try:
-                response = requests.get(file_url, timeout=20)
-                response.raise_for_status()
-                zipf.writestr(filename, response.content)
+                r = requests.get(f["secure_url"], timeout=20)
+                r.raise_for_status()
+
+                name = f["public_id"].split("/")[-1]
+
+                if f["resource_type"] == "raw":
+                    if "." not in name:
+                        name += ".txt"
+                elif "format" in f:
+                    name += f".{f['format']}"
+
+                zipf.writestr(name, r.content)
+
             except Exception:
                 continue
 
     zip_buffer.seek(0)
-
     return send_file(
         zip_buffer,
-        mimetype="application/zip",
         as_attachment=True,
-        download_name=f"{patient}_reports.zip"
+        download_name=f"{patient}_RECORDS.zip",
+        mimetype="application/zip"
     )
+
 
 
 
@@ -893,35 +889,42 @@ def download_patient_zip(hospital, doctor, patient):
 def download_hospital_zip(hospital):
     prefix = f"{hospital}/"
 
-    result = cloudinary.api.resources(
-        type="upload",
-        prefix=prefix,
-        max_results=500
-    )
+    resources = []
+    for rt in ("image", "video", "raw"):
+        res = cloudinary.api.resources(
+            type="upload",
+            resource_type=rt,
+            prefix=prefix,
+            max_results=500
+        )
+        resources += res.get("resources", [])
 
-    files = result.get("resources", [])
-    if not files:
+    if not resources:
         flash("No files found for this hospital.", "error")
         return redirect(url_for("reports"))
 
     zip_buffer = io.BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for f in files:
+        for f in resources:
             try:
                 r = requests.get(f["secure_url"], timeout=20)
                 r.raise_for_status()
 
-                name = f["public_id"].split("/")[-1]
-                if "format" in f:
-                    name += f".{f['format']}"
+                rel_path = f["public_id"].replace(prefix, "")
 
-                zipf.writestr(name, r.content)
+                if f["resource_type"] == "raw":
+                    if "." not in rel_path:
+                        rel_path += ".txt"
+                elif "format" in f:
+                    rel_path += f".{f['format']}"
+
+                zipf.writestr(rel_path, r.content)
+
             except Exception:
                 continue
 
     zip_buffer.seek(0)
-
     return send_file(
         zip_buffer,
         as_attachment=True,
@@ -932,40 +935,48 @@ def download_hospital_zip(hospital):
 
 
 
+
 @app.route("/download-doctor/<hospital>/<doctor>")
 @login_required
 def download_doctor_zip(hospital, doctor):
     prefix = f"{hospital}/{doctor}/"
 
-    result = cloudinary.api.resources(
-        type="upload",
-        prefix=prefix,
-        max_results=500
-    )
+    resources = []
+    for rt in ("image", "video", "raw"):
+        res = cloudinary.api.resources(
+            type="upload",
+            resource_type=rt,
+            prefix=prefix,
+            max_results=500
+        )
+        resources += res.get("resources", [])
 
-    files = result.get("resources", [])
-    if not files:
+    if not resources:
         flash("No files found for this doctor.", "error")
         return redirect(url_for("reports"))
 
     zip_buffer = io.BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for f in files:
+        for f in resources:
             try:
                 r = requests.get(f["secure_url"], timeout=20)
                 r.raise_for_status()
 
-                name = f["public_id"].split("/")[-1]
-                if "format" in f:
-                    name += f".{f['format']}"
+                rel_path = f["public_id"].replace(prefix, "")
 
-                zipf.writestr(name, r.content)
+                if f["resource_type"] == "raw":
+                    if "." not in rel_path:
+                        rel_path += ".txt"
+                elif "format" in f:
+                    rel_path += f".{f['format']}"
+
+                zipf.writestr(rel_path, r.content)
+
             except Exception:
                 continue
 
     zip_buffer.seek(0)
-
     return send_file(
         zip_buffer,
         as_attachment=True,
