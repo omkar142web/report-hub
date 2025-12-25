@@ -152,11 +152,8 @@ def get_latest_patient_upload(patient_data):
     """
     if not patient_data["files"]:
         return datetime.min
+    return max(f["created_at_dt"] for f in patient_data["files"])
 
-    return max(
-        datetime.strptime(f["date"], "%b %d, %Y")
-        for f in patient_data["files"]
-    )
 
 
 
@@ -219,6 +216,7 @@ def build_reports_data(prefix=None):
         upload_date = datetime.strptime(
             res["created_at"], "%Y-%m-%dT%H:%M:%SZ"
         ).strftime("%b %d, %Y")
+        upload_dt = datetime.strptime(res["created_at"], "%Y-%m-%dT%H:%M:%SZ")
 
         # ---------- SAFE filename handling (FIX for raw files) ----------
         filename = parts[-1]   # base filename from public_id
@@ -242,6 +240,8 @@ def build_reports_data(prefix=None):
             "is_video": res["resource_type"] == "video",
             "is_text": res["resource_type"] == "raw",
             "resource_type": res["resource_type"],
+            "created_at_dt": upload_dt,
+
         }
         # ---------------------------------------------------------------
 
@@ -291,6 +291,55 @@ def build_reports_data(prefix=None):
                     reverse=True
                 )
             )
+
+            # ==================================================
+    # 3️⃣ SORT DOCTOR + HOSPITAL BY LATEST UPLOAD
+    # ==================================================
+
+    def get_latest_doctor_upload(patients):
+        if not patients:
+            return datetime.min
+        return max(get_latest_patient_upload(p) for p in patients.values())
+
+    def get_latest_hospital_upload(doctors):
+        if not doctors:
+            return datetime.min
+        return max(get_latest_doctor_upload(p) for p in doctors.values())
+
+    # ============================
+    # SORT LEVELS (NEWEST FIRST)
+    # ============================
+
+    # 1️⃣ PATIENTS (you already had, keep this)
+    for hospital, doctors in data.items():
+        for doctor, patients in doctors.items():
+            data[hospital][doctor] = dict(
+                sorted(
+                    patients.items(),
+                    key=lambda item: get_latest_patient_upload(item[1]),
+                    reverse=True
+                )
+            )
+
+    # 2️⃣ DOCTORS
+    for hospital, doctors in data.items():
+        data[hospital] = dict(
+            sorted(
+                doctors.items(),
+                key=lambda item: get_latest_doctor_upload(item[1]),
+                reverse=True
+            )
+        )
+
+    # 3️⃣ HOSPITALS
+    data = dict(
+        sorted(
+            data.items(),
+            key=lambda item: get_latest_hospital_upload(item[1]),
+            reverse=True
+        )
+    )
+
 
     # ==================================================
     # AGGREGATE COUNTS (Hospital & Doctor)
