@@ -1,78 +1,138 @@
-# Medical Patient Reports Web Application
+# 🩺 Report Hub
 
-This is a simple Flask web application for uploading and viewing medical patient reports. It uses Cloudinary for persistent cloud storage, ensuring that uploaded files are not lost on server restarts or redeploys.
+Report Hub is a Flask-based medical report management system designed to streamline the process of uploading, organizing, and accessing patient records. It connects patients, doctors, and hospitals through a secure, cloud-based interface powered by Cloudinary.
 
-## Features
+## ✨ Key Features
 
-- **Cloud-Based File Upload**: Upload patient reports (PDF, PNG, JPG, etc.) directly to Cloudinary.
-- **Patient Organization**: Files are automatically organized into folders by patient name in the cloud.
-- **Doctor Dashboard**: A secure, login-protected dashboard for doctors to manage reports.
-- **Powerful Search**: Search for reports by patient name or filename.
-- **In-Browser Previews**: Preview images and PDFs directly on the reports page.
-- **Secure Deletion**: Doctors can permanently delete reports from cloud storage.
+### 📂 File Management
 
-## Tech Stack
+- **Multi-Format Support:** Upload PDFs, Images (PNG, JPG, GIF), Videos (MP4, MOV, WEBM), and Raw Data (TXT, CSV, LOG).
+- **Cloud Storage:** All files are securely stored and managed via **Cloudinary**.
+- **Smart Organization:** Files are automatically sorted by Hospital > Doctor > Patient.
+- **Public & Private Uploads:**
+  - General public upload portal.
+  - Dedicated upload links for specific Hospitals (`/upload/h/<code>`) and Doctors (`/upload/d/<code>`).
 
-- **Backend**: Flask
-- **File Storage**: Cloudinary
-- **Frontend**: HTML, CSS, JavaScript
-- **Deployment**: Ready for services like Render, Heroku, etc.
+### 🔐 Role-Based Access
 
-## Setup and Installation
+- **Admin:** Full access to all hospitals, doctors, and patient records.
+- **Hospital:** Access to all doctors and patients associated with the specific hospital.
+- **Doctor:** Access only to their specific patient list.
+- **Security:** Secure password hashing (Werkzeug) and session management with version control to invalidate sessions on password changes.
+
+### 💻 User Interface
+
+- **Modern Design:** Dark mode UI with glassmorphism effects and responsive layout.
+- **Live Search:** Real-time filtering of patients and files.
+- **File Previews:** Built-in modal previews for images and PDFs; video player for media files.
+- **Bulk Actions:** Download all records for a Patient, Doctor, or Hospital as a ZIP file.
+
+## 🛠️ Tech Stack
+
+- **Backend:** Python, Flask
+- **Storage:** Cloudinary API
+- **Frontend:** HTML5, CSS3 (Custom variables, Flexbox/Grid), JavaScript (Vanilla)
+- **Utilities:** `requests`, `zipfile`, `io`
+
+## 🚀 Installation & Setup
 
 ### 1. Prerequisites
 
-- Python 3.x
-- A free [Cloudinary](https://cloudinary.com/users/register/free) account.
+- Python 3.8+
+- A Cloudinary account
 
-### 2. Clone the Repository
+### 2. Environment Variables
 
-```bash
-git clone <your-repository-url>
-cd medical_site
-```
-
-### 3. Install Dependencies
-
-It's recommended to use a virtual environment.
+Create a `.env` file or set the following system environment variables:
 
 ```bash
-# Create and activate a virtual environment (optional but recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-
-# Install the required packages
-pip install -r requirements.txt
+export CLOUDINARY_CLOUD_NAME="your_cloud_name"
+export CLOUDINARY_API_KEY="your_api_key"
+export CLOUDINARY_API_SECRET="your_api_secret"
+export SECRET_KEY="your_flask_secret_key"
+export DOCTOR_PASSWORD_HASH="hash_for_admin_login"
 ```
 
-### 4. Configuration (Crucial Step)
+### 3. Data Configuration
 
-This application requires environment variables for configuration. The easiest way to manage these for local development is to create a `.env` file in the root of your project.
+Ensure the `data/` directory exists and contains an `auth.json` file for managing credentials.
 
-Create a file named `.env` and add the following, filling in your own values:
+**Structure of `data/auth.json`:**
 
+```json
+{
+  "hospitals": {
+    "city_hospital": {
+      "password_hash": "scrypt:32768:8:1$...",
+      "password_updated_at": 1715000000
+    }
+  },
+  "doctors": {
+    "dr_smith": {
+      "hospital": "city_hospital",
+      "password_hash": "scrypt:32768:8:1$...",
+      "password_updated_at": 1715000000
+    }
+  }
+}
 ```
-CLOUDINARY_CLOUD_NAME="your_cloud_name"
-CLOUDINARY_API_KEY="your_api_key"
-CLOUDINARY_API_SECRET="your_api_secret"
 
-# Generate a strong secret key with: python -c "import secrets; print(secrets.token_hex(16))"
-SECRET_KEY="your_generated_secret_key"
-
-# Generate a password hash with: python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('your-chosen-password'))"
-DOCTOR_PASSWORD_HASH="your_generated_password_hash"
-```
-
-**Note:** You will need to install a library to load the `.env` file. Add `python-dotenv` to your `requirements.txt` and `pip install python-dotenv`. Then, add `from dotenv import load_dotenv; load_dotenv()` to the top of `app.py`.
-
-When deploying to a service like Render, you will set these same variables in the service's "Environment" or "Secrets" dashboard instead of using a `.env` file.
-
-### 5. Run the Application
-
-With your environment configured, you can run the development server:
+### 4. Running the Application
 
 ```bash
+# Install dependencies (ensure you have a requirements.txt or install manually)
+pip install flask cloudinary requests werkzeug
+
+# Run the app
 python app.py
 ```
 
-The application will be available at `http://127.0.0.1:5000`.
+The application will start at `http://0.0.0.0:5000`.
+
+## 📖 Usage Guide
+
+### Uploading Reports
+
+- **General Upload:** Visit the homepage `/`. Enter the patient's name and drag & drop files.
+- **Targeted Upload:** Use specific URLs like `/upload/h/city_hospital` to upload directly to a hospital's unassigned folder, or `/upload/d/dr_smith` for a specific doctor.
+
+### Viewing Reports (Dashboard)
+
+1.  Navigate to `/login`.
+2.  Enter your password. The system automatically detects if you are an Admin, Hospital, or Doctor based on the password hash.
+3.  **Dashboard Features:**
+    - **Expand/Collapse:** Click on Hospital or Doctor names to toggle views.
+    - **Search:** Type in the search bar to filter patients or filenames instantly.
+    - **Download:** Click the "Download" button on any card (Patient/Doctor/Hospital) to generate a ZIP archive.
+    - **Delete:** Use the delete button on specific files to remove them from Cloudinary.
+
+### API Endpoints
+
+The application exposes internal APIs for managing entities (requires authentication):
+
+- `POST /api/add-entity`: Create new Hospital or Doctor credentials.
+- `POST /api/delete-entity`: Remove an entity and **delete all associated files** from Cloudinary.
+- `POST /api/change-password`: Update credentials.
+
+## 📂 Project Structure
+
+```
+report_hub/
+├── app.py                 # Main application logic & routes
+├── data/
+│   └── auth.json          # JSON database for users (Hospitals/Doctors)
+├── static/
+│   ├── style.css          # Main stylesheet (Dark theme)
+│   ├── upload.js          # Drag & drop upload logic
+│   └── toast.js           # Notification logic
+├── templates/
+│   ├── index.html         # Upload page
+│   ├── login.html         # Login page
+│   ├── reports.html       # Main dashboard (Admin/Hospital/Doctor views)
+│   └── reports_data.html  # Data management view
+└── README.md              # Project documentation
+```
+
+---
+
+_Inspired by Rutu • Built with Flask & Cloudinary_
