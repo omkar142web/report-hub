@@ -338,6 +338,9 @@ def upload_hospital(hospital_code):
     # 1️⃣ Validate hospital
     if hospital_code not in set(DOCTOR_MAP.values()):
         return "Invalid hospital upload link", 404
+    
+    # ✅ make title usable in BOTH GET + POST
+    display_name = hospital_code.replace("_", " ").title()
 
     if request.method == "POST":
         patient = request.form.get("patient", "").strip()
@@ -372,7 +375,7 @@ def upload_hospital(hospital_code):
                 uploaded += 1
 
         return jsonify({
-            "success": f"{uploaded} file(s) uploaded for {patient}."
+            "success": f"{uploaded} file(s) uploaded for {display_name}."
         })
 
     # GET → same upload UI
@@ -561,6 +564,9 @@ def upload_doctor(doctor_code):
 
     hospital = DOCTOR_MAP[doctor_code]
 
+    # ✅ make doctor display name available to BOTH POST + GET
+    display_name = doctor_code.replace("_", " ").title()
+
     # 2️⃣ Handle upload (same UX as /)
     if request.method == "POST":
         patient = request.form.get("patient", "").strip()
@@ -594,7 +600,7 @@ def upload_doctor(doctor_code):
                 uploaded += 1
 
         return jsonify({
-            "success": f"{uploaded} file(s) uploaded for {patient}."
+            "success": f"{uploaded} file(s) uploaded for {display_name}."
         })
 
     # 3️⃣ GET → reuse existing upload UI
