@@ -491,7 +491,7 @@ def index():
 
     return render_template(
     "index.html",
-    upload_title="📤 Upload Public Files Only ⚠️"
+    upload_title="📤 Uploading For 🌐"
 )
 
 
