@@ -57,8 +57,18 @@
     </script>
     {% endif %}
 
-
-    
-
+    <script>
+      const loginForm = document.querySelector(".login-form");
+      if (loginForm) {
+        loginForm.addEventListener("submit", function (e) {
+          const btn = this.querySelector("button[type='submit']");
+          if (btn) {
+            btn.innerText = "Logging in...";
+            btn.style.opacity = "0.7";
+            btn.style.cursor = "wait";
+          }
+        });
+      }
+    </script>
   </body>
 </html>
