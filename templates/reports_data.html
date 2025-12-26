@@ -35,7 +35,7 @@
     <h3 style="margin-top: 0; margin-bottom: 20px;">Add New Entity</h3>
 
     <!-- TYPE -->
-    <div style="margin-bottom: 20px;">
+    <div style="margin-bottom: 2px;">
       <label style="display:block; color:#94a3b8; font-size:0.85rem; margin-bottom:8px; font-weight:600;">
         I want to add a:
       </label>
@@ -56,7 +56,7 @@
 
       <div id="doctorList"></div>
 
-      <button class="btn secondary-btn" onclick="addDoctorRow()">
+      <button style="margin-bottom: 20px;" class="btn secondary-btn" onclick="addDoctorRow()">
         ➕ Add Doctor Row
       </button>
     </div>
@@ -74,8 +74,8 @@
              placeholder="Doctor Password" required>
     </div>
 
-    <div class="modal-actions" style="margin-top: 25px;">
-      <button class="btn danger" onclick="closeAddModal()">Cancel</button>
+    <div class="modal-actions" style="margin-top: 1px;">
+      <button class="btn danger" onclick="closeAddModal()" style="margin-right: 25px;" >Cancel</button>
       <button class="btn success" onclick="submitAdd()">Add</button>
     </div>
   </div>
