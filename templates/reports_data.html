@@ -17,63 +17,64 @@
 
     <!-- MAIN -->
     <div class="main">
-      <h1>🔐 Auth Management</h1>
+      <div class="admin-header-row">
+        <h1>🔐 Auth Management</h1>
+        <button class="btn success add-btn" onclick="openAddModal()">
+          ➕ Add New
+        </button>
+      </div>
 
       <!-- FILTER BAR (replaces search) -->
-      <div class="search-box">
+      <div class="search-box admin-filter-bar">
         <button id="filterToggle" class="btn">
           🔁 View: Hospital → Doctors
         </button>
       </div>
-      <button class="btn success" onclick="openAddModal()">
-  ➕ Add
-</button>
-<br>
-<br>
-<br>
 <div id="addModal" class="modal hidden">
   <div class="modal-box">
-    <h3>Add Hospital / Doctor</h3>
+    <h3 style="margin-top: 0; margin-bottom: 20px;">Add New Entity</h3>
 
     <!-- TYPE -->
-    <select id="addType" class="input" onchange="updateAddForm()">
-      <option value="hospital">Hospital</option>
-      <option value="doctor">Doctor</option>
-    </select>
+    <div style="margin-bottom: 20px;">
+      <label style="display:block; color:#94a3b8; font-size:0.85rem; margin-bottom:8px; font-weight:600;">
+        I want to add a:
+      </label>
+      <select id="addType" class="input" onchange="updateAddForm()" style="cursor:pointer;">
+        <option value="hospital">🏥 New Hospital</option>
+        <option value="doctor">👨‍⚕️ New Doctor (to existing hospital)</option>
+      </select>
+    </div>
 
     <!-- HOSPITAL SECTION -->
     <div id="hospitalSection">
       <input id="hospitalCode" class="input"
-             placeholder="Hospital code (apollo_mumbai)" required>
+             placeholder="Hospital Code (e.g. apollo_mumbai)" required>
+      <input id="hospitalPassword" type="password" class="input"
+             placeholder="Hospital Password" required>
 
-      <!-- <button class="btn" onclick="addDoctorRow()">➕ Add Doctor (optional)</button> -->
+      <div class="divider"><span>Optional: Add Doctors</span></div>
 
       <div id="doctorList"></div>
 
-      <input id="hospitalPassword" type="password" class="input"
-             placeholder="Hospital password (required)">
+      <button class="btn secondary-btn" onclick="addDoctorRow()">
+        ➕ Add Doctor Row
+      </button>
     </div>
 
     <!-- DOCTOR ONLY SECTION -->
-     <div></div>
-     <button class="btn" onclick="addDoctorRow()">➕ Add Doctor (optional)</button>
-<div><br></div>
     <div id="doctorSection" class="hidden">
       <input id="doctorCode" class="input"
-             placeholder="Doctor code (dr_xyz)" required>
+             placeholder="Doctor Code (e.g. dr_smith)" required>
 
-      
-      <select id="doctorHospital" class="input">
-        {% for h in auth.hospitals %}
-          <option value="{{ h }}">{{ h }}</option>
-        {% endfor %}
+      <select id="doctorHospital" class="input" style="cursor:pointer;">
+        <option value="">Select Hospital</option>
       </select>
 
       <input id="doctorPassword" type="password" class="input"
-             placeholder="Doctor password" required>
+             placeholder="Doctor Password" required>
     </div>
 
-    <div class="modal-actions" style="display: flex; gap: 12px;">
+    <div class="modal-actions" style="margin-top: 25px;">
       <button class="btn danger" onclick="closeAddModal()">Cancel</button>
       <button class="btn success" onclick="submitAdd()">Add</button>
     </div>
@@ -83,7 +84,7 @@
 
 
       <!-- DATA CONTAINER -->
-      <div id="dataContainer"></div>
+      <div id="dataContainer" class="admin-grid"></div>
 
     </div>
   </div>
@@ -164,14 +165,14 @@ for (const doctor in auth.doctors) {
 
 
       let html = `
-  <div class="admin-hospital-row">
+  <div class="admin-hospital-header">
     <div class="admin-hospital-name">
       🏥 ${hospital.replaceAll("_"," ")}
     </div>
 
-    <button class="btn danger"
+    <button class="btn-icon danger" title="Delete Hospital"
       onclick="deleteEntity('hospital','${hospital}')">
-      Delete
+      🗑️
     </button>
   </div>
 `;
@@ -181,17 +182,17 @@ for (const doctor in auth.doctors) {
       hospitalMap[hospital].forEach(doc => {
           html += `
             <div class="admin-doctor-row">
-              <span class="admin-doctor-name">👨‍⚕️ ${doc}</span>
+              <span class="admin-doctor-name">👨‍⚕️ ${doc.replaceAll("_", " ")}</span>
 
               <div class="admin-actions">
-                <button class="btn"
+                <button class="btn-icon" title="Change Password"
                   onclick="openModal('doctor','${doc}')">
-                  Change Password
+                  🔑
                 </button>
 
-                <button class="btn danger"
+                <button class="btn-icon danger" title="Delete Doctor"
                   onclick="deleteEntity('doctor','${doc}')">
-                  Delete
+                  🗑️
                 </button>
               </div>
             </div>
@@ -212,17 +213,19 @@ for (const doctor in auth.doctors) {
 
 
       block.innerHTML = `
-  <strong>🏥 ${hospital.replaceAll("_"," ")}</strong>
-
-  <button class="btn"
-    onclick="openModal('hospital','${hospital}')">
-    Change Password
-  </button>
-
-  <button class="btn danger"
-  onclick="deleteEntity('hospital','${hospital}')">
-  Delete
-</button>
+  <div class="admin-hospital-header">
+    <div class="admin-hospital-name">🏥 ${hospital.replaceAll("_"," ")}</div>
+    <div class="admin-actions">
+      <button class="btn-icon" title="Change Password"
+        onclick="openModal('hospital','${hospital}')">
+        🔑
+      </button>
+      <button class="btn-icon danger" title="Delete Hospital"
+        onclick="deleteEntity('hospital','${hospital}')">
+        🗑️
+      </button>
+    </div>
+  </div>
 
 `;
 
@@ -296,142 +299,42 @@ async function deleteEntity(type, id) {
 <script>
 function openAddModal() {
   document.getElementById("addModal").classList.remove("hidden");
+  // Reset form
+  document.getElementById("addType").value = "hospital";
+  document.getElementById("hospitalCode").value = "";
+  document.getElementById("hospitalPassword").value = "";
+  document.getElementById("doctorList").innerHTML = "";
+  document.getElementById("doctorCode").value = "";
+  document.getElementById("doctorPassword").value = "";
+  updateAddForm();
 }
 
 function closeAddModal() {
   document.getElementById("addModal").classList.add("hidden");
 }
 
-async function submitAdd() {
-  const type = document.getElementById("addType").value;
-
-  if (type === "hospital") {
-    const hospital = hospitalCode.value.trim();
-    const hpw = hospitalPassword.value.trim();
-
-    if (!hospital) return alert("Hospital code required");
-
-    // Case: hospital + doctors
-    const doctors = document.querySelectorAll(".doctor-row");
-
-    if (doctors.length > 0) {
-      await fetch("/api/add-entity", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({
-          type: "hospital",
-          id: hospital,
-          password: "temp"
-        })
-      });
-
-      for (const d of doctors) {
-        const code = d.querySelector(".doc-code").value.trim();
-        const pw = d.querySelector(".doc-password").value.trim();
-        if (!code || !pw) return alert("Doctor code & password required");
-
-        await fetch("/api/add-entity", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({
-            type: "doctor",
-            id: code,
-            hospital,
-            password: pw
-          })
-        });
-      }
-    } else {
-      if (!hpw) return alert("Hospital password required");
-
-      await fetch("/api/add-entity", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({
-          type: "hospital",
-          id: hospital,
-          password: hpw
-        })
-      });
-    }
-  }
-
-  if (type === "doctor") {
-    const code = doctorCode.value.trim();
-    const pw = doctorPassword.value.trim();
-    const hospital = doctorHospital.value;
-
-    if (!code || !pw || !hospital)
-      return alert("All doctor fields required");
-
-    await fetch("/api/add-entity", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        type: "doctor",
-        id: code,
-        hospital,
-        password: pw
-      })
-    });
-  }
-
-  alert("Added successfully");
-  location.reload();
-}
-
-</script>
-
-
-<script>
-const hospitals = Object.keys(auth.hospitals);
-
-function onTypeChange() {
-  const type = document.getElementById("addType").value;
-
-  document.getElementById("doctorOnly").style.display =
-    type === "doctor" ? "block" : "none";
-
-  document.getElementById("askDoctors").style.display =
-    type === "hospital" ? "block" : "none";
-
-  document.getElementById("hospitalPassword").style.display =
-    type === "hospital" ? "block" : "none";
-
-  if (type === "doctor") {
-    const select = document.getElementById("doctorHospital");
-    select.innerHTML = `<option value="">Select hospital</option>`;
-    hospitals.forEach(h =>
-      select.innerHTML += `<option value="${h}">${h}</option>`
-    );
-  }
-}
-
-function addDoctorRow() {
-  const container = document.getElementById("doctorList");
-
-  container.innerHTML += `
-    <div class="doctor-row">
-      <input class="input doc-code" placeholder="Doctor code (dr_xyz)" />
-      <input class="input doc-password" type="password" placeholder="Doctor password" />
-    </div>
-  `;
-}
-</script>
-
-<script>
 function updateAddForm() {
   const type = document.getElementById("addType").value;
   document.getElementById("hospitalSection").classList.toggle("hidden", type !== "hospital");
   document.getElementById("doctorSection").classList.toggle("hidden", type !== "doctor");
+
+  if (type === "doctor") {
+    const select = document.getElementById("doctorHospital");
+    select.innerHTML = `<option value="">Select hospital</option>`;
+    // Sort hospitals for better UX
+    Object.keys(auth.hospitals).sort().forEach(h => {
+      select.innerHTML += `<option value="${h}">${h.replaceAll("_", " ")}</option>`
+    });
+  }
 }
 
 function addDoctorRow() {
   const div = document.createElement("div");
+  div.className = "doctor-row-dynamic";
   div.innerHTML = `
-    <input class="input doctor-code" placeholder="Doctor code (dr_xyz)" required>
-    <input class="input doctor-password" type="password"
-           placeholder="Doctor password" required>
+    <input class="input doctor-code" placeholder="Dr. Code" required>
+    <input class="input doctor-password" type="password" placeholder="Password" required>
+    <button class="btn-icon danger" onclick="this.parentElement.remove()" title="Remove" style="width:36px; height:36px; flex-shrink:0;">✕</button>
   `;
   document.getElementById("doctorList").appendChild(div);
 }
@@ -459,18 +362,24 @@ async function submitAdd() {
     });
 
     // optional doctors
-    document.querySelectorAll(".doctor-code").forEach((el, i) => {
+    const rows = document.querySelectorAll(".doctor-row-dynamic");
+    for (const row of rows) {
+      const code = row.querySelector(".doctor-code").value.trim();
+      const pw = row.querySelector(".doctor-password").value.trim();
+      
+      if (code && pw) {
       fetch("/api/add-entity", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           type: "doctor",
-          id: el.value.trim(),
+            id: code,
           hospital,
-          password: document.querySelectorAll(".doctor-password")[i].value
+            password: pw
         })
       });
-    });
+      }
+    }
 
   } else {
     const doctor = document.getElementById("doctorCode").value.trim();

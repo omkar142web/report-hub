@@ -1828,26 +1828,54 @@ body {
    ADMIN / AUTH MANAGEMENT CARDS
    ========================================================= */
 
+
+.admin-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.add-btn {
+  width: auto;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+  padding-bottom: 40px;
+}
+
 .admin-card {
   background: var(--panel);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  padding: 18px 20px;
-  margin-bottom: 18px;
+  padding: 0; /* Reset padding for header/body split */
+  margin-bottom: 0; /* Grid handles gap */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
   box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-card:hover {
   border-color: rgba(56,189,248,0.4);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-strong);
 }
 
 
-.admin-hospital-row {
+.admin-hospital-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  padding: 15px 20px;
+  background: rgba(56, 189, 248, 0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
 .admin-hospital-name {
@@ -1855,6 +1883,9 @@ body {
   font-weight: 800;
   letter-spacing: 0.4px;
   color: #bae6fd; /* calm admin cyan */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-doctor-row {
@@ -1862,17 +1893,26 @@ body {
   justify-content: space-between;
   align-items: center;
 
-  margin-left: 18px;
-  margin-top: 10px;
-  padding: 10px 12px;
+  margin: 8px 15px;
+  padding: 12px 15px;
 
   background: rgba(255,255,255,0.03);
   border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.admin-doctor-row:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.admin-doctor-row:last-child {
+  margin-bottom: 15px;
 }
 
 .admin-doctor-name {
   font-size: 0.95rem;
   color: #e5e7eb;
+  font-weight: 500;
 }
 
 .admin-actions {
@@ -1881,23 +1921,57 @@ body {
 }
 
 
-
-.admin-card .btn {
-  padding: 8px 12px;
-  font-size: 0.85rem;
+.btn-icon {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: var(--text-main);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+  padding: 0;
 }
 
+.btn-icon:hover {
+  background: rgba(255,255,255,0.2);
+  transform: scale(1.05);
+}
+
+.btn-icon.danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
 
 .main h1 {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 0; /* handled by header-row */
 }
 
-#filterToggle {
+.admin-filter-bar {
+  margin: 20px 0 30px 0;
+  max-width: 100%;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+.admin-filter-bar #filterToggle {
   background: linear-gradient(135deg, #22d3ee, #38bdf8);
   color: #020617;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: block;
 }
+
 
 
 /* ========================================================= */
@@ -2198,3 +2272,55 @@ body {
   word-break: break-word;
 }
 
+/* =========================
+   MODAL FORM IMPROVEMENTS
+   ========================= */
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0 15px;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.divider span {
+  padding: 0 10px;
+}
+
+.doctor-row-dynamic {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.03);
+  padding: 10px;
+  border-radius: 10px;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.doctor-row-dynamic .input {
+  margin-bottom: 0 !important;
+  font-size: 0.9rem;
+  padding: 10px;
+}
+
+.secondary-btn {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-dim);
+  border: 1px dashed rgba(255,255,255,0.2);
+  transition: all 0.2s;
+}
+.secondary-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
