@@ -70,5 +70,17 @@
         });
       }
     </script>
+    
+    <script>
+  window.addEventListener("pageshow", () => {
+    const btn = document.querySelector(".login-form button[type='submit']");
+    if (btn) {
+      btn.innerText = "Login";
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
+    }
+  });
+</script>
+
   </body>
 </html>
