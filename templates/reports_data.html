@@ -170,10 +170,15 @@ for (const doctor in auth.doctors) {
       🏥 ${hospital.replaceAll("_"," ")}
     </div>
 
-    <button class="btn-icon danger" title="Delete Hospital"
-      onclick="deleteEntity('hospital','${hospital}')">
-      🗑️
-    </button>
+    <div class="admin-actions">
+      <button class="btn-icon" title="Share Upload Link" onclick="shareLink('hospital','${hospital}')">
+        🔗
+      </button>
+      <button class="btn-icon danger" title="Delete Hospital"
+        onclick="deleteEntity('hospital','${hospital}')">
+        🗑️
+      </button>
+    </div>
   </div>
 `;
 
@@ -185,6 +190,10 @@ for (const doctor in auth.doctors) {
               <span class="admin-doctor-name">👨‍⚕️ ${doc.replaceAll("_", " ")}</span>
 
               <div class="admin-actions">
+                <button class="btn-icon" title="Share Upload Link" onclick="shareLink('doctor','${doc}')">
+                  🔗
+                </button>
+
                 <button class="btn-icon" title="Change Password"
                   onclick="openModal('doctor','${doc}')">
                   🔑
@@ -216,6 +225,10 @@ for (const doctor in auth.doctors) {
   <div class="admin-hospital-header">
     <div class="admin-hospital-name">🏥 ${hospital.replaceAll("_"," ")}</div>
     <div class="admin-actions">
+      <button class="btn-icon" title="Share Upload Link" onclick="shareLink('hospital','${hospital}')">
+        🔗
+      </button>
+
       <button class="btn-icon" title="Change Password"
         onclick="openModal('hospital','${hospital}')">
         🔑
@@ -265,6 +278,26 @@ async function deleteEntity(type, id) {
     location.reload();
   } else {
     alert(data.error || "Failed");
+  }
+}
+
+async function shareLink(type, id) {
+  const baseUrl = "https://fileuploadhub.onrender.com";
+  const url = `${baseUrl}/upload/${type === 'hospital' ? 'h' : 'd'}/${id}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Upload Link',
+        text: `Upload files for ${id.replaceAll('_', ' ')}`,
+        url: url
+      });
+    } catch (err) {
+      console.log('Share cancelled');
+    }
+  } else {
+    await navigator.clipboard.writeText(url);
+    alert("Link copied to clipboard! 📋\n" + url);
   }
 }
 </script>
