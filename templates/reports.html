@@ -1008,6 +1008,7 @@ document.addEventListener("click", async (e) => {
 </div>
 
 
+
 <script>
 let longPressTimer = null;
 let targetData = null;
@@ -1042,7 +1043,7 @@ function closeSheet(){
 }
 
 function buildSheetMenu(data){
-  document.getElementById("actionOverlay").classList.remove("hidden");
+  openSheet();
 
   const sheet = document.getElementById("actionSheet");
   const title = document.getElementById("sheetTitle");
@@ -1245,12 +1246,21 @@ async function renamePatient(){
 
 
 
+// function closeMoveSheet(){
+//   const overlay = document.getElementById("moveOverlay");
+//   overlay.classList.add("hidden");
+//   overlay.querySelector(".action-sheet").classList.remove("show");
+// }
 function closeMoveSheet(){
   const overlay = document.getElementById("moveOverlay");
   overlay.classList.add("hidden");
   overlay.querySelector(".action-sheet").classList.remove("show");
-}
 
+  if(history.state && history.state.move){
+    history.back();
+  }
+
+}
 
 function openMoveSheet(){
   if(!targetData || targetData.type !== "patient") return;
@@ -1259,10 +1269,12 @@ function openMoveSheet(){
   document.getElementById("actionOverlay").classList.add("hidden");
 
   const overlay = document.getElementById("moveOverlay");
-  overlay.classList.remove("hidden");
+  // overlay.classList.remove("hidden");
 
   // 🔥 THIS WAS MISSING
-  overlay.querySelector(".action-sheet").classList.add("show");
+  // overlay.querySelector(".action-sheet").classList.add("show");
+  openMoveUI();
+
 
   document.getElementById("curHospital").innerText = targetData.hospital;
   document.getElementById("curDoctor").innerText = targetData.doctor;
@@ -1273,6 +1285,20 @@ function openMoveSheet(){
   buildHospitalDropdown();
 }
 
+// Safe Mobile BACK Button Support
+function openSheet(){
+  document.getElementById("actionOverlay").classList.remove("hidden");
+  document.getElementById("actionSheet").classList.add("show");
+
+  history.pushState({ sheet:true }, "");   // <-- Important
+}
+
+function openMoveUI(){
+  document.getElementById("moveOverlay").classList.remove("hidden");
+  document.querySelector("#moveOverlay .action-sheet").classList.add("show");
+
+  history.pushState({ move:true }, "");   // <-- Important
+}
 
 
 // =======================
@@ -1439,6 +1465,33 @@ function copyHospitalUploadLink(){
 
   copy(link);
 }
+
+
+// CLOSE WHEN CLICKING OUTSIDE
+document.getElementById("actionOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "actionOverlay"){
+    closeSheet();
+  }
+});
+
+document.getElementById("moveOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "moveOverlay"){
+    closeMoveSheet();
+  }
+});
+
+window.addEventListener("popstate", ()=>{
+  const action = document.getElementById("actionOverlay");
+  const move = document.getElementById("moveOverlay");
+
+  if(action && !action.classList.contains("hidden")){
+    closeSheet();
+  }
+
+  if(move && !move.classList.contains("hidden")){
+    closeMoveSheet();
+  }
+});
 
 
 
