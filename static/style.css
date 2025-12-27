@@ -2395,7 +2395,7 @@ body {
 .sheet-header button {
   position: absolute;       /* float over header */
   top: 50%;
-  right: 12px;              /* distance from right edge */
+  right: 1px;             /* distance from right edge */
   transform: translateY(-50%);  /* perfectly vertical center */
   
   background: rgba(255,255,255,.1);
