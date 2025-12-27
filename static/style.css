@@ -2366,7 +2366,7 @@ body {
   transform: translateY(0);
 }
 
-.sheet-header {
+/* .sheet-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2381,7 +2381,38 @@ body {
   height: 30px;
   cursor: pointer;
   color: white;
+} */
+
+
+.sheet-header {
+  position: relative;       /* needed for absolute positioning */
+  display: flex;
+  justify-content: center;   /* center the title */
+  align-items: center;
+  margin-bottom: 12px;
 }
+
+.sheet-header button {
+  position: absolute;       /* float over header */
+  top: 50%;
+  right: 12px;              /* distance from right edge */
+  transform: translateY(-50%);  /* perfectly vertical center */
+  
+  background: rgba(255,255,255,.1);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+
 
 .sheet-options button {
   width: 100%;
