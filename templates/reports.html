@@ -1056,25 +1056,27 @@ function buildSheetMenu(data){
     addAction("Move Patient", () => openMoveSheet());
     addAction("Rename Patient", () => renamePatient());
     addAction("Share Link", () => alert("Share Coming"));
-    addAction("Total Size", () => alert("Stats Coming"));
+    // addAction("Total Size", () => alert("Stats Coming"));
     addAction("Delete Patient", () => deletePatient());
   }
 
   if(data.type === "doctor"){
     title.innerText = "Doctor Actions";
-    addAction("Move Doctor", () => alert("Move Coming"));
-    addAction("Share View Link", () => alert("Share Coming"));
-    addAction("Share Upload Link", () => alert("Upload Link Coming"));
-    addAction("Total Size", () => alert("Stats Coming"));
-    addAction("Delete Doctor", () => alert("Delete Coming"));
+    // addAction("Move Doctor", () => alert("Move Coming"));
+    // addAction("Share View Link", () => alert("Share Coming"));
+    addAction("Share Upload Link", () => copyDoctorUploadLink());
+
+    // addAction("Total Size", () => alert("Stats Coming"));
+    // addAction("Delete Doctor", () => alert("Delete Coming"));
   }
 
   if(data.type === "hospital"){
     title.innerText = "Hospital Actions";
-    addAction("Share View Link", () => alert("Share Coming"));
-    addAction("Share Upload Link", () => alert("Upload Coming"));
-    addAction("Total Size", () => alert("Stats Coming"));
-    addAction("Delete Hospital", () => alert("Delete Coming"));
+    // addAction("Share View Link", () => alert("Share Coming"));
+    addAction("Share Upload Link", () => copyHospitalUploadLink());
+
+    // addAction("Total Size", () => alert("Stats Coming"));
+    // addAction("Delete Hospital", () => alert("Delete Coming"));
   }
 }
 
@@ -1399,6 +1401,44 @@ async function confirmMovePatient(){
   location.reload();  // easiest for now; later we’ll do instant UI update
 }
 
+
+function copy(text){
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).catch(() => {});
+  } else {
+    const t = document.createElement("textarea");
+    t.value = text;
+    t.style.position = "fixed";   // avoid scroll jump
+    t.style.opacity = "0";
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand("copy");
+    t.remove();
+  }
+}
+
+
+
+// -------- DOCTOR UPLOAD LINK ----------
+function copyDoctorUploadLink(){
+  closeSheet();
+
+  const base = "https://fileuploadhub.onrender.com";
+  const link = `${base}/upload/d/${targetData.doctor}`;
+
+  copy(link);
+}
+
+
+// -------- HOSPITAL UPLOAD LINK ----------
+function copyHospitalUploadLink(){
+  closeSheet();
+
+  const base = "https://fileuploadhub.onrender.com";
+  const link = `${base}/upload/h/${targetData.hospital}`;
+
+  copy(link);
+}
 
 
 
