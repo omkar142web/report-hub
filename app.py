@@ -19,6 +19,43 @@ import cloudinary.api
 import json
 import re
 
+# =========================
+# PERMISSION SECURITY LAYER
+# =========================
+def has_access(hospital=None, doctor=None):
+    role = session.get("role")
+    user = session.get("user")
+
+    # Admin can do everything
+    if role == "admin":
+        return True
+
+    # Hospital can only its own
+    if role == "hospital":
+        return hospital == user
+
+    # Doctor can only own hospital+doctor
+    if role == "doctor":
+        return hospital == session.get("hospital") and doctor == user
+
+    return False
+
+
+# =========================
+# SHARE TOKEN STORAGE
+# =========================
+SHARE_PATH = "shares.json"
+
+def load_shares():
+    if not os.path.exists(SHARE_PATH):
+        return {"tokens": {}}
+    with open(SHARE_PATH, "r") as f:
+        return json.load(f)
+
+def save_shares(data):
+    with open(SHARE_PATH, "w") as f:
+        json.dump(data, f, indent=2)
+
 
 
 AUTH_FILE = "data/auth.json"
@@ -1112,6 +1149,416 @@ def download_raw(public_id):
         download_name=filename,
         mimetype="text/plain"
     )
+
+
+
+# =========================
+# PUBLIC SHARE VIEW ROUTE
+# =========================
+@app.route("/share/<token>")
+def shared_view(token):
+    shares = load_shares()
+
+    if token not in shares["tokens"]:
+        return "Invalid or expired link", 404
+
+    data = shares["tokens"][token]
+
+    # Expiry check
+    if time.time() > data["expires"]:
+        del shares["tokens"][token]
+        save_shares(shares)
+        return "Link expired", 410
+
+    # Build view-only data same as reports()
+    hospital = data["hospital"]
+
+    if data["scope"] == "hospital":
+        dataset = build_data(hospital=hospital)
+
+    elif data["scope"] == "doctor":
+        dataset = build_data(hospital=hospital, doctor=data["doctor"])
+
+    else:
+        dataset = build_data(
+            hospital=hospital,
+            doctor=data["doctor"],
+            patient=data["patient"]
+        )
+
+    return render_template(
+        "reports.html",
+        data=dataset,
+        view="share",
+        readonly=True
+    )
+
+
+# =========================
+# TOTAL SIZE API
+# =========================
+@app.route("/api/stats", methods=["POST"])
+def api_stats():
+    req = request.json
+
+    scope = req.get("scope")
+    hospital = req.get("hospital")
+    doctor = req.get("doctor")
+    patient = req.get("patient")
+
+    if not has_access(hospital, doctor):
+        return jsonify({"error": "No access"}), 403
+
+    prefix = ""
+
+    if scope == "hospital":
+        prefix = f"{hospital}/"
+
+    elif scope == "doctor":
+        prefix = f"{hospital}/{doctor}/"
+
+    elif scope == "patient":
+        prefix = f"{hospital}/{doctor}/{patient}/"
+
+    res = cloudinary.api.resources(prefix=prefix, recursive=True, max_results=500)
+
+    total = sum(f.get("bytes", 0) for f in res["resources"])
+    count = len(res["resources"])
+
+    return jsonify({
+        "ok": True,
+        "bytes": total,
+        "files": count
+    })
+
+# =========================
+# DELETE PATIENT
+# =========================
+@app.post("/api/patient/delete")
+def api_delete_patient():
+    data = request.get_json()
+
+    hospital = data.get("hospital")
+    doctor = data.get("doctor")
+    patient = data.get("patient")
+
+    if not (hospital and doctor and patient):
+        return jsonify(ok=False, error="missing")
+
+    prefix = f"{hospital}/{doctor}/{patient}"
+
+    try:
+        # ---- DELETE ALL FILES FROM CLOUDINARY ----
+        cloudinary.api.delete_resources_by_prefix(prefix)
+
+        # ---- DELETE FOLDER STRUCTURE ----
+        try:
+            cloudinary.api.delete_folder(prefix)
+        except:
+            pass
+
+        return jsonify(ok=True)
+
+    except Exception as e:
+        print("DELETE FAILED:", e)
+        return jsonify(ok=False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =========================
+# MOVE PATIENT
+# =========================
+@app.post("/api/patient/move")
+def api_move_patient():
+    data = request.get_json()
+
+    from_h = data.get("from_hospital")
+    from_d = data.get("from_doctor")
+    patient = data.get("patient")
+
+    to_h = data.get("to_hospital")
+    to_d = data.get("to_doctor")
+    new_name = data.get("new_name")
+    merge = data.get("merge", False)
+
+    old_prefix = f"{from_h}/{from_d}/{patient}"
+    new_prefix = f"{to_h}/{to_d}/{new_name}"
+
+    try:
+        # check conflict
+        existing = cloudinary.api.resources(
+            type="upload",
+            prefix=new_prefix,
+            max_results=1
+        )
+
+        if existing["resources"] and not merge:
+            return jsonify(conflict=True)
+
+        files = cloudinary.api.resources(
+            type="upload",
+            prefix=old_prefix,
+            max_results=500
+        )
+
+        for f in files["resources"]:
+            old_id = f["public_id"]
+            new_id = old_id.replace(old_prefix, new_prefix, 1)
+
+            cloudinary.uploader.rename(
+                old_id,
+                new_id,
+                overwrite=True
+            )
+
+        try:
+            cloudinary.api.delete_folder(old_prefix)
+        except:
+            pass
+
+        return jsonify(ok=True)
+
+    except Exception as e:
+        print("MOVE FAILED:", e)
+        return jsonify(ok=False)
+
+
+# =========================
+# RENAME PATIENT
+# =========================
+@app.post("/api/patient/rename")
+def api_rename_patient():
+    data = request.get_json()
+
+    hospital = data.get("hospital")
+    doctor = data.get("doctor")
+    old_name = data.get("old_name")
+    new_name = data.get("new_name")
+    merge = data.get("merge", False)
+
+    if not (hospital and doctor and old_name and new_name):
+        return jsonify(ok=False, error="missing")
+
+    old_prefix = f"{hospital}/{doctor}/{old_name}"
+    new_prefix = f"{hospital}/{doctor}/{new_name}"
+
+    try:
+        # Check if new already exists
+        existing = cloudinary.api.resources(
+            type="upload",
+            prefix=new_prefix,
+            max_results=1
+        )
+
+        if existing["resources"] and not merge:
+            return jsonify(conflict=True)
+
+        # ===== RENAME (MOVE) ALL FILES =====
+        files = cloudinary.api.resources(
+            type="upload",
+            prefix=old_prefix,
+            max_results=500
+        )
+
+        for f in files["resources"]:
+            old_id = f["public_id"]
+            # Replace prefix
+            new_id = old_id.replace(old_prefix, new_prefix, 1)
+
+            cloudinary.uploader.rename(
+                old_id,
+                new_id,
+                overwrite=True
+            )
+
+        try:
+            cloudinary.api.delete_folder(old_prefix)
+        except:
+            pass
+
+        return jsonify(ok=True)
+
+    except Exception as e:
+        print("RENAME FAILED:", e)
+        return jsonify(ok=False)
+
+
+
+
+
+
+
+# =========================
+# DELETE DOCTOR
+# =========================
+@app.route("/api/doctor/delete", methods=["POST"])
+def api_delete_doctor():
+    req = request.json
+
+    hospital = req["hospital"]
+    doctor = req["doctor"]
+
+    if not has_access(hospital, doctor):
+        return jsonify({"error": "No access"}), 403
+
+    prefix = f"{hospital}/{doctor}"
+
+    cloudinary.api.delete_resources_by_prefix(prefix)
+    cloudinary.api.delete_folder(prefix)
+
+    # ---- remove from auth.json ----
+    auth = load_auth()
+
+    if hospital in auth and doctor in auth[hospital]["doctors"]:
+        del auth[hospital]["doctors"][doctor]
+        save_auth(auth)
+
+    return jsonify({"ok": True})
+
+
+
+
+
+
+# =========================
+# MOVE DOCTOR
+# =========================
+@app.route("/api/doctor/move", methods=["POST"])
+def api_move_doctor():
+    req = request.json
+
+    src_h = req["source"]["hospital"]
+    src_d = req["source"]["doctor"]
+
+    dst_h = req["target"]["hospital"]
+    dst_d = req["target"]["doctor"]
+
+    merge = req.get("merge", False)
+    keep_separate = req.get("keep_separate", False)
+
+    if not has_access(src_h, src_d):
+        return jsonify({"error": "No access to source"}), 403
+
+    if not has_access(dst_h, dst_d):
+        return jsonify({"error": "No access to destination"}), 403
+
+    source_prefix = f"{src_h}/{src_d}"
+    base_target_prefix = f"{dst_h}/{dst_d}"
+    final_target_prefix = base_target_prefix
+
+    # ---- conflict doctor check ----
+    exists = cloudinary.api.resources(prefix=base_target_prefix, max_results=1)
+    conflict = len(exists["resources"]) > 0
+
+    if conflict and not merge and not keep_separate:
+        return jsonify({"conflict": True, "message": "Doctor already exists"})
+
+
+    if conflict and keep_separate:
+        i = 2
+        while True:
+            check = cloudinary.api.resources(
+                prefix=f"{base_target_prefix}_{i}",
+                max_results=1
+            )
+            if len(check["resources"]) == 0:
+                final_target_prefix = f"{base_target_prefix}_{i}"
+                break
+            i += 1
+
+    files = cloudinary.api.resources(prefix=source_prefix, max_results=500)
+    moved = 0
+
+    for f in files["resources"]:
+        pub = f["public_id"]
+        name = pub.split("/")[-1]
+
+        rest = "/".join(pub.split("/")[2:])  # patient/file fallback path
+
+        new_id = f"{final_target_prefix}/{rest}"
+
+        cloudinary.uploader.rename(pub, new_id, overwrite=True)
+        moved += 1
+
+    try:
+        cloudinary.api.delete_folder(source_prefix)
+    except:
+        pass
+
+    return jsonify({"ok": True, "moved": moved})
+
+
+# =========================
+# DELETE HOSPITAL
+# =========================
+@app.route("/api/hospital/delete", methods=["POST"])
+def api_delete_hospital():
+    req = request.json
+    hospital = req["hospital"]
+
+    if not has_access(hospital):
+        return jsonify({"error": "No access"}), 403
+
+    prefix = f"{hospital}"
+
+    cloudinary.api.delete_resources_by_prefix(prefix)
+    cloudinary.api.delete_folder(prefix)
+
+    auth = load_auth()
+    if hospital in auth:
+        del auth[hospital]
+        save_auth(auth)
+
+    return jsonify({"ok": True})
+
+
+# =========================
+# GENERATE SHARE LINK
+# =========================
+@app.route("/api/share/create", methods=["POST"])
+def api_share_create():
+    req = request.json
+
+    scope = req["scope"]
+    hospital = req["hospital"]
+    doctor = req.get("doctor")
+    patient = req.get("patient")
+
+    if not has_access(hospital, doctor):
+        return jsonify({"error": "No access"}), 403
+
+    expiry_hours = req.get("expiry_hours", 24)
+
+    token = os.urandom(6).hex()
+
+    shares = load_shares()
+
+    shares["tokens"][token] = {
+        "scope": scope,
+        "hospital": hospital,
+        "doctor": doctor,
+        "patient": patient,
+        "expires": time.time() + (expiry_hours * 3600)
+    }
+
+    save_shares(shares)
+
+    return jsonify({
+        "ok": True,
+        "token": token,
+        "url": f"{request.host_url}share/{token}"
+    })
+
 
 
 

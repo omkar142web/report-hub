@@ -51,6 +51,12 @@
 
                 {% if view == "all" %}
                 <div class="group-toggle hospital-toggle"
+                  data-type="hospital"
+                  data-hospital="{{ hospital }}"
+                  oncontextmenu="openActions(event)"
+                  ontouchstart="handleTouchStart(event)"
+                  ontouchend="handleTouchEnd(event)"
+
                       onclick="toggleGroup('hospital-{{ h.i }}')">
 
                     <span class="group-title">
@@ -94,6 +100,13 @@
                   <section class="doctor-section">
                     {% if view != "doctor" %}
                     <div class="group-toggle doctor-toggle"
+                      data-type="doctor"
+                      data-hospital="{{ hospital }}"
+                      data-doctor="{{ doctor }}"
+                      oncontextmenu="openActions(event)"
+                      ontouchstart="handleTouchStart(event)"
+                      ontouchend="handleTouchEnd(event)"
+
                           onclick="toggleGroup('doctor-{{ h.i }}-{{ loop.index }}')">
                     {% else %}
                     <div class="group-toggle doctor-toggle active">
@@ -147,7 +160,15 @@
                         {% set idx.i = idx.i + 1 %}
 
                         <section class="patient-section">
-                          <button class="patient-toggle" onclick="event.stopPropagation(); togglePatient('{{ idx.i }}')">
+                          <button class="patient-toggle"
+                            data-type="patient"
+                            data-hospital="{{ hospital }}"
+                            data-doctor="{{ doctor }}"
+                            data-patient="{{ patient }}"
+                            oncontextmenu="openActions(event)"
+                            ontouchstart="handleTouchStart(event)"
+                            ontouchend="handleTouchEnd(event)"
+                          onclick="event.stopPropagation(); togglePatient('{{ idx.i }}')">
                             <span class="patient-name">👤 {{ patient }}</span>
 
                             <div class="patient-info-wrapper" onclick="event.stopPropagation()">
@@ -940,6 +961,448 @@ document.addEventListener("click", async (e) => {
 </script>
 
 
+<div id="moveOverlay" class="action-overlay hidden">
+  <div class="action-sheet">
+    
+    <div class="sheet-header">
+      <span>Move Patient</span>
+      <button onclick="closeMoveSheet()">✖</button>
+    </div>
+
+    <div class="sheet-options">
+
+      <div class="move-box">
+        <p>Current</p>
+        <div>🏥 <b id="curHospital"></b></div>
+        <div>👨‍⚕️ <b id="curDoctor"></b></div>
+        <div>👤 <b id="curPatient"></b></div>
+      </div>
+
+      <label>Select Hospital</label>
+      <select id="moveHospital"></select>
+
+      <label>Select Doctor</label>
+      <select id="moveDoctor"></select>
+
+      <label>New Patient Name (optional)</label>
+      <input id="movePatientName" />
+
+      <button onclick="confirmMovePatient()">Move</button>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+<div id="actionOverlay" class="action-overlay hidden">
+  <div id="actionSheet" class="action-sheet">
+    <div class="sheet-header">
+      <span id="sheetTitle"></span>
+      <button onclick="closeSheet()">✖</button>
+    </div>
+
+    <div id="sheetOptions" class="sheet-options"></div>
+  </div>
+</div>
+
+
+<script>
+let longPressTimer = null;
+let targetData = null;
+
+function handleTouchStart(e){
+  const el = e.currentTarget;
+  longPressTimer = setTimeout(() => openActionsFromEl(el), 500);
+}
+
+function handleTouchEnd(){
+  clearTimeout(longPressTimer);
+}
+
+function openActions(e){
+  e.preventDefault();
+  openActionsFromEl(e.currentTarget);
+}
+
+function openActionsFromEl(el){
+  targetData = {
+    type: el.dataset.type,
+    hospital: el.dataset.hospital,
+    doctor: el.dataset.doctor,
+    patient: el.dataset.patient
+  };
+
+  buildSheetMenu(targetData);
+}
+
+function closeSheet(){
+  document.getElementById("actionOverlay").classList.add("hidden");
+}
+
+function buildSheetMenu(data){
+  document.getElementById("actionOverlay").classList.remove("hidden");
+
+  const sheet = document.getElementById("actionSheet");
+  const title = document.getElementById("sheetTitle");
+  const options = document.getElementById("sheetOptions");
+
+  sheet.classList.add("show");
+  options.innerHTML = "";
+
+  if(data.type === "patient"){
+    title.innerText = "Patient Actions";
+    addAction("Move Patient", () => openMoveSheet());
+    addAction("Rename Patient", () => renamePatient());
+    addAction("Share Link", () => alert("Share Coming"));
+    addAction("Total Size", () => alert("Stats Coming"));
+    addAction("Delete Patient", () => deletePatient());
+  }
+
+  if(data.type === "doctor"){
+    title.innerText = "Doctor Actions";
+    addAction("Move Doctor", () => alert("Move Coming"));
+    addAction("Share View Link", () => alert("Share Coming"));
+    addAction("Share Upload Link", () => alert("Upload Link Coming"));
+    addAction("Total Size", () => alert("Stats Coming"));
+    addAction("Delete Doctor", () => alert("Delete Coming"));
+  }
+
+  if(data.type === "hospital"){
+    title.innerText = "Hospital Actions";
+    addAction("Share View Link", () => alert("Share Coming"));
+    addAction("Share Upload Link", () => alert("Upload Coming"));
+    addAction("Total Size", () => alert("Stats Coming"));
+    addAction("Delete Hospital", () => alert("Delete Coming"));
+  }
+}
+
+function addAction(text, fn){
+  const btn = document.createElement("button");
+  btn.innerText = text;
+  btn.onclick = fn;
+  document.getElementById("sheetOptions").appendChild(btn);
+}
+
+
+
+
+async function deletePatient(){
+  if(!targetData) return;
+
+  const yes = confirm(
+    "⚠ Delete Patient?\n\n" +
+    "This will delete ALL reports of:\n\n" +
+    `🏥 ${targetData.hospital}\n` +
+    `👨‍⚕️ ${targetData.doctor}\n` +
+    `👤 ${targetData.patient}\n\n` +
+    "This CANNOT be undone!"
+  );
+
+  if(!yes) return;
+
+  closeSheet();
+
+  try{
+    const res = await fetch("/api/patient/delete", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        hospital: targetData.hospital,
+        doctor: targetData.doctor,
+        patient: targetData.patient
+      })
+    });
+
+    const data = await res.json();
+    if(!data.ok) throw new Error();
+
+    alert("Patient deleted successfully ✔");
+
+    // Remove from UI
+    const selector = `[data-type='patient'][data-hospital='${targetData.hospital}'][data-doctor='${targetData.doctor}'][data-patient='${targetData.patient}']`;
+    const btn = document.querySelector(selector);
+
+    if(btn){
+      const patientSection = btn.closest(".patient-section");
+      const doctorSection = btn.closest(".doctor-section");
+      const hospitalSection = btn.closest(".hospital-section");
+
+      patientSection.remove();
+
+      // remove doctor if empty
+      if(
+        doctorSection &&
+        doctorSection.querySelectorAll(".patient-section").length === 0
+      ){
+        doctorSection.remove();
+      }
+
+      // remove hospital if empty
+      if(
+        hospitalSection &&
+        hospitalSection.querySelectorAll(".doctor-section").length === 0
+      ){
+        hospitalSection.remove();
+      }
+    }
+
+  }catch(e){
+    alert("Delete failed, refresh and try again");
+  }
+}
+
+
+
+
+
+
+
+
+async function renamePatient(){
+  if(!targetData) return;
+
+  const newName = prompt(
+    "✏️ Enter new patient name\n\n" +
+    `Current: ${targetData.patient}`
+  );
+
+  if(!newName || newName.trim() === "" || newName === targetData.patient)
+    return;
+
+  closeSheet();
+
+  try{
+    const res = await fetch("/api/patient/rename", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        hospital: targetData.hospital,
+        doctor: targetData.doctor,
+        old_name: targetData.patient,
+        new_name: newName.trim()
+      })
+    });
+
+    const data = await res.json();
+
+    // 🔴 If conflict found
+    if(data.conflict){
+
+      const choice = confirm(
+        "⚠ Patient Already Exists!\n\n" +
+        `Do you want to MERGE into "${newName}"?\n\n` +
+        "OK = Merge\nCancel = Keep Separate (no action)"
+      );
+
+      if(!choice) return;
+
+      // send merge request
+      await fetch("/api/patient/rename", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          hospital: targetData.hospital,
+          doctor: targetData.doctor,
+          old_name: targetData.patient,
+          new_name: newName.trim(),
+          merge: true
+        })
+      });
+
+      alert("Merged successfully ✔");
+    }
+    else if(!data.ok){
+      throw new Error();
+    }
+
+    alert("Patient renamed ✔");
+
+    // Update UI instantly
+    const selector = `[data-type='patient'][data-hospital='${targetData.hospital}'][data-doctor='${targetData.doctor}'][data-patient='${targetData.patient}']`;
+    const btn = document.querySelector(selector);
+
+    if(btn){
+      btn.dataset.patient = newName;
+      btn.querySelector(".patient-name").innerText = "👤 " + newName;
+    }
+
+    targetData.patient = newName;
+
+  }catch(e){
+    alert("Rename failed. Refresh & try again.");
+  }
+}
+
+
+
+
+
+
+
+
+
+function closeMoveSheet(){
+  const overlay = document.getElementById("moveOverlay");
+  overlay.classList.add("hidden");
+  overlay.querySelector(".action-sheet").classList.remove("show");
+}
+
+
+function openMoveSheet(){
+  if(!targetData || targetData.type !== "patient") return;
+
+  // close action sheet
+  document.getElementById("actionOverlay").classList.add("hidden");
+
+  const overlay = document.getElementById("moveOverlay");
+  overlay.classList.remove("hidden");
+
+  // 🔥 THIS WAS MISSING
+  overlay.querySelector(".action-sheet").classList.add("show");
+
+  document.getElementById("curHospital").innerText = targetData.hospital;
+  document.getElementById("curDoctor").innerText = targetData.doctor;
+  document.getElementById("curPatient").innerText = targetData.patient;
+
+  document.getElementById("movePatientName").value = targetData.patient;
+
+  buildHospitalDropdown();
+}
+
+
+
+// =======================
+//  Build Dropdowns
+// =======================
+function buildHospitalDropdown(){
+  const select = document.getElementById("moveHospital");
+  select.innerHTML = "";
+
+  let hospitals = [...document.querySelectorAll(".hospital-toggle")];
+
+  // -------------------------
+  // Doctor View / Hospital View Fix
+  // -------------------------
+  if(hospitals.length === 0){
+    // Create current hospital manually
+    const opt = document.createElement("option");
+    opt.value = targetData.hospital;
+    opt.innerText = targetData.hospital;
+    select.appendChild(opt);
+  } 
+  else {
+    // Normal Admin View
+    hospitals.forEach(h => {
+      const name = h.dataset.hospital;
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.innerText = name;
+      select.appendChild(opt);
+    });
+
+    select.value = targetData.hospital;
+  }
+
+  buildDoctorDropdown();
+}
+
+
+document.getElementById("moveHospital").addEventListener("change", buildDoctorDropdown);
+
+function buildDoctorDropdown(){
+  const hospital = document.getElementById("moveHospital").value;
+  const select = document.getElementById("moveDoctor");
+  select.innerHTML = "";
+
+  const doctors = document.querySelectorAll(
+    `.doctor-toggle[data-hospital='${hospital}']`
+  );
+
+  doctors.forEach(d => {
+    const name = d.dataset.doctor;
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.innerText = name;
+    select.appendChild(opt);
+  });
+
+  select.value = targetData.doctor;
+}
+
+
+
+
+async function confirmMovePatient(){
+  const toHospital = document.getElementById("moveHospital").value;
+  const toDoctor = document.getElementById("moveDoctor").value;
+  const newName = document.getElementById("movePatientName").value.trim();
+
+  if(!newName){
+    alert("Enter patient name");
+    return;
+  }
+
+  closeMoveSheet();
+
+  const body = {
+    from_hospital: targetData.hospital,
+    from_doctor: targetData.doctor,
+    patient: targetData.patient,
+    to_hospital: toHospital,
+    to_doctor: toDoctor,
+    new_name: newName,
+    merge: false
+  };
+
+  const res = await fetch("/api/patient/move", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+
+  if(data.conflict){
+    const ok = confirm(
+      "⚠ Patient Already Exists There\n\n" +
+      "Do you want to MERGE?\n\n" +
+      "OK = Merge\nCancel = Abort"
+    );
+
+    if(!ok) return;
+
+    body.merge = true;
+
+    const res2 = await fetch("/api/patient/move", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json"},
+      body: JSON.stringify(body)
+    });
+
+    const d2 = await res2.json();
+    if(!d2.ok){
+      alert("Move failed");
+      return;
+    }
+
+    alert("Merged Successfully ✔");
+  }
+  else if(!data.ok){
+    alert("Move failed");
+    return;
+  }
+
+  alert("Patient Moved ✔");
+
+  location.reload();  // easiest for now; later we’ll do instant UI update
+}
+
+
+
+
+</script>
 
 
   </body>
