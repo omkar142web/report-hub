@@ -342,6 +342,17 @@ def build_reports_data(prefix=None):
                     reverse=True
                 )
             )
+    # ============================================
+    # 🔥 SORT FILES INSIDE EACH PATIENT (NEWEST → OLD)
+    # ============================================
+    for hospital, doctors in data.items():
+        for doctor, patients in doctors.items():
+            for patient, patient_data in patients.items():
+                patient_data["files"].sort(
+                    key=lambda f: f["created_at_dt"],
+                    reverse=True
+                )
+
 
             # ==================================================
     # 3️⃣ SORT DOCTOR + HOSPITAL BY LATEST UPLOAD
