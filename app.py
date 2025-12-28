@@ -174,12 +174,26 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_next_index(folder_prefix):
-    result = cloudinary.api.resources(
-        type="upload",
-        prefix=f"{folder_prefix}/",
-        max_results=500
-    )
-    return len(result.get("resources", [])) + 1
+    numbers = []
+
+    for rt in ("image", "video", "raw"):
+        res = cloudinary.api.resources(
+            type="upload",
+            resource_type=rt,
+            prefix=f"{folder_prefix}/",
+            max_results=500
+        )
+
+        for f in res.get("resources", []):
+            name = f["public_id"].split("/")[-1]
+
+            # extract _NUMBER at end
+            match = re.search(r'_(\d+)$', name)
+            if match:
+                numbers.append(int(match.group(1)))
+
+    return (max(numbers) + 1) if numbers else 1
+
 
 
 
