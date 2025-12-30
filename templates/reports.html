@@ -15,7 +15,7 @@
       </div>
 
       <div class="main">
-        <h1> <a  href="https://fileuploadhub.onrender.com/reports/data" style="color: aliceblue;">Patient Records </a><a href="http://127.0.0.1:5000/reports/data">📋</a></h1>
+        <h1> <a  href="{{ url_for('reports_data') }}" style="color: aliceblue;">Patient Records </a><a href="http://127.0.0.1:5000/reports/data">📋</a></h1>
 
         <form class="search-box" action="{{ url_for('reports') }}" method="get">
           <label for="search" class="sr-only"> Search patient or report name </label>
@@ -1449,7 +1449,8 @@ function copy(text){
 function copyDoctorUploadLink(){
   closeSheet();
 
-  const base = "https://fileuploadhub.onrender.com";
+  const base = "{{ request.host_url.rstrip('/') }}";
+
   const link = `${base}/upload/d/${targetData.doctor}`;
 
   copy(link);
@@ -1460,7 +1461,8 @@ function copyDoctorUploadLink(){
 function copyHospitalUploadLink(){
   closeSheet();
 
-  const base = "https://fileuploadhub.onrender.com";
+  const base = "{{ request.host_url.rstrip('/') }}";
+
   const link = `${base}/upload/h/${targetData.hospital}`;
 
   copy(link);

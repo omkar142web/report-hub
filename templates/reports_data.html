@@ -282,7 +282,8 @@ async function deleteEntity(type, id) {
 }
 
 async function shareLink(type, id) {
-  const baseUrl = "https://fileuploadhub.onrender.com";
+  const baseUrl = "{{ request.host_url.rstrip('/') }}";
+
   const url = `${baseUrl}/upload/${type === 'hospital' ? 'h' : 'd'}/${id}`;
 
   if (navigator.share) {
